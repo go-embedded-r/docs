@@ -4,14 +4,17 @@ weight: 20
 description: "Package syntax (M1): the API, the tree, the errors, the bounds, TopLevelNames, number parsing, and the parity table with R 4.6.2."
 ---
 
-<!-- From the README of go-embedded-r/r at v0.1.0, section "M1: the parser". Change the repository's README first, then here. -->
+<!-- From the README of go-embedded-r/r on main (v0.2.0), section "M1: the parser". Change the repository's README first, then here. -->
 
-The package is `github.com/go-embedded-r/r/syntax`, released in
-[v0.1.0](https://github.com/go-embedded-r/r/releases/tag/v0.1.0).
+The package is `github.com/go-embedded-r/r/syntax`; the parser was released in
+[v0.1.0](https://github.com/go-embedded-r/r/releases/tag/v0.1.0) and `deparse`
+completes M1 in [v0.2.0](https://github.com/go-embedded-r/r/releases/tag/v0.2.0)
+(see [Deparse]({{< relref "deparse" >}})).
 
 ```go
 f, err := syntax.ParseAll(src)                    // or ParseAllLimits(src, syntax.Limits{MaxBytes, MaxDepth, MaxNodes})
 names, err := syntax.TopLevelNames(cell)          // names a cell assigns and reads
+lines := syntax.Deparse(f.Exprs[0], nil)          // deparse(), one string per line
 ```
 
 ## The tree
@@ -73,20 +76,22 @@ Judged by the oracle, never by expectations written by hand:
 1. the terminal tokens and positions with `getParseData()`;
 2. the tree with a dump of the language objects of `parse(keep.source = FALSE)`
    (names, constants as IEEE bits, empty arguments, formals);
-3. the error text with `parse()`'s.
+3. the error text with `parse()`'s;
+4. the output of `deparse()` and `print()` (see [Deparse]({{< relref "deparse" >}})).
 
 R's own sources are read where they are unpacked and never committed.
 
-| Corpus | Inputs | Tree | Tokens | Error text, byte for byte |
-| --- | --- | --- | --- | --- |
-| R `src/library`: every `.R` file of the base packages (7.8 MB) | 844 (842 parse, 2 rejected) | **842 / 842** | **842 / 842** | **2 / 2** |
-| R `tests/`: 95 files (1 is not UTF-8 and is skipped) | 94 (90 parse, 4 rejected) | **90 / 90** | **90 / 90** | **4 / 4** |
-| our snippets (`testdata/snippets.R`) | 42 | **42 / 42** | **42 / 42** | n/a |
-| our error cases (`testdata/errors.R`) | 52 (1 parses) | **1 / 1** | **1 / 1** | **51 / 51** |
-| our edge cases: Unicode, raw strings, `\|>`, `\(x)`, `->>`, hex/`L`/`i` numbers (`testdata/edge.R`) | 93 (3 rejected) | **90 / 90** | **90 / 90** | **3 / 3** |
-| odd input: CRLF, tabs, form feeds, Unicode spaces, bidi controls, invalid UTF-8, `=>` (`parity.Extras` + `values.R`) | 117 (36 rejected) | **81 / 81** | **81 / 81** | **36 / 36** |
-| differential fuzz: 190 000 random edits of lines of R's sources (seeds 1, 2, 11) | 190 000 (about two thirds rejected) | **all** | **all** | **all** |
-| decimal literals, random (up to 20 digits, exponents -330..330) | 100 000 | **100 000 identical doubles** | | |
+| Corpus | Inputs | Tree | Tokens | Deparse | Error text, byte for byte |
+| --- | --- | --- | --- | --- | --- |
+| R `src/library`: every `.R` file of the base packages (7.8 MB) | 844 (842 parse, 2 rejected) | **842 / 842** | **842 / 842** | **842 / 842** | **2 / 2** |
+| R `tests/`: 95 files (1 is not UTF-8 and is skipped) | 94 (90 parse, 4 rejected) | **90 / 90** | **90 / 90** | **90 / 90** | **4 / 4** |
+| our snippets (`testdata/snippets.R`) | 42 | **42 / 42** | **42 / 42** | **42 / 42** | n/a |
+| our error cases (`testdata/errors.R`) | 52 (1 parses) | **1 / 1** | **1 / 1** | **1 / 1** | **51 / 51** |
+| our edge cases: Unicode, raw strings, `\|>`, `\(x)`, `->>`, hex/`L`/`i` numbers (`testdata/edge.R`) | 88 (3 rejected) | **85 / 85** | **85 / 85** | **85 / 85** | **3 / 3** |
+| our deparse cases: parentheses, precedence, line breaking, indentation, constants, names (`testdata/deparse.R`) | 65 (2 rejected) | **63 / 63** | **63 / 63** | **63 / 63** | **2 / 2** |
+| odd input: CRLF, tabs, form feeds, Unicode spaces, bidi controls, invalid UTF-8, `=>`, 50 and 5000 parentheses (`parity.Extras`, `values.R`) | 120 | all | all | all | all |
+| differential fuzz: 610 000 random edits of lines of R's sources (seeds 21, 31, 41, 42) | 610 000 (about two thirds rejected) | **all** | **all** | **all** | **all** |
+| decimal literals, random (up to 20 digits, exponents -330..330) | 100 000 | **100 000 identical doubles** | | 99 995 identical, 5 not | |
 
 ## Speed
 
@@ -99,7 +104,7 @@ builds the source map and the token list) and **0.269 s** in R's
 
 ## Known gaps
 
-The effect of `#line` directives on the line numbers of later errors; a Go
-`deparse` printer (the tree is compared structurally); `parse(file=)` encoding
-options; an invalid UTF-8 input is parsed as R's lexer does, and for such text
-R cannot produce parse data, so tokens are not compared.
+The effect of `#line` directives on the line numbers of later errors;
+`parse(file=)` encoding options; an invalid UTF-8 input is parsed as R's lexer
+does, and for such text R cannot produce parse data, so tokens are not
+compared.
