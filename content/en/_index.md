@@ -4,17 +4,19 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable R interpreter, in development: v0.2.0 completes M0 (oracle harness against GNU R 4.6.2) and M1 (parser and deparse); M2 (evaluator) is in progress, slice 1 on main; M3 to M8 are planned."
+description: "A pure-Go, embeddable R interpreter, in development: v0.3.0 completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and slices 1 and 2 of M2 (evaluator); M3 to M8 are planned."
 ---
 
 **go-embedded-r is in development.
-[v0.2.0](https://github.com/go-embedded-r/r/releases/tag/v0.2.0) (2026-11-03)
+[v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0) (2026-11-04)
 of [go-embedded-r/r](https://github.com/go-embedded-r/r) completes milestone M0
-(the oracle harness, against the pinned GNU R 4.6.2) and milestone M1 (the
+(the oracle harness, against the pinned GNU R 4.6.2), milestone M1 (the
 parser and `deparse`, package `syntax`), which agrees with R's tree, tokens,
-error text and deparse output on 842 of 842 files of R's base packages.**
-Milestone M2, the evaluator (package `eval`), is in progress: its first slice,
-71 of R's 210 primitives, is on `main` and not tagged yet. Base, stats, regex,
+error text and deparse output on 842 of 842 files of R's base packages, and
+slices 1 and 2 of milestone M2.** The evaluator (package `eval`) has 94 of R's
+210 primitives and 32 base closures, with replacement, subsetting, attributes,
+S3 dispatch, conditions and `print`; 819 of 819 goldens match R 4.6.2. M2 is
+not finished. Base, stats, regex,
 graphics, the notebook bridge, the WebAssembly playground and CRAN ports
 (M3 to M8) are planned and not started. The interpreter is therefore not
 finished.
@@ -41,10 +43,11 @@ The `r` cells of [go-notebook](https://go-notebook.github.io/), the way
 
 | Page | What it holds |
 | --- | --- |
-| [Plan]({{< relref "plan" >}}) | the milestones: M0 and M1 done, M2 in progress, M3 to M8 planned |
+| [Plan]({{< relref "plan" >}}) | the milestones: M0 and M1 done, M2 slices 1 and 2 done, M3 to M8 planned |
 | [The parser]({{< relref "parser" >}}) | package `syntax`: the API, the tree, the errors, the bounds, and the parity table with R 4.6.2 |
 | [Deparse]({{< relref "deparse" >}}) | `syntax.Deparse`: parity with R 4.6.2 and the platform divergences |
-| [Evaluator (in progress)]({{< relref "evaluator" >}}) | M2, package `eval`: the design choices and slice 1, 71 of 210 primitives, judged by the oracle |
+| [Evaluator]({{< relref "evaluator" >}}) | M2, package `eval`: the design choices, slices 1 and 2 (94 of 210 primitives and 32 base closures), judged by the oracle |
+| [Eval API]({{< relref "eval-api" >}}) | `NewSession`, `Options` and the limits an embedder must set, `Eval`, `Result` and `Error` |
 | [The oracle harness]({{< relref "oracle" >}}) | `internal/oracle`, `rds`, `cmd/roracle`, the goldens, and how to get the oracle |
 | [Licences]({{< relref "licences" >}}) | BSD-3-Clause, and what "clean room" means here |
 
