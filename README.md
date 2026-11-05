@@ -11,7 +11,7 @@ fork of the [Hextra](https://github.com/imfing/hextra) theme (pinned to v0.16.0)
 built the same way as the [go-embedded-julia documentation](https://github.com/go-embedded-julia/docs).
 The organization is **in development**: milestones M0 (the oracle harness) and
 M1 (the parser and deparse) are done, and slices 1 and 2 of M2 (the
-evaluator) are done, in go-embedded-r/r v0.3.0; M3 to M8 are planned. The site
+evaluator) are done, in go-embedded-r/r v0.4.0; M3 to M8 are planned. The site
 gives the plan, the parser and deparse with their parity tables against
 R 4.6.2, the evaluator's design and slices, the Eval API, the
 oracle harness, and the licence rule. Every statement comes from the README and
@@ -31,8 +31,8 @@ tagged:
 
 `https://go-embedded-r.github.io/docs/` redirects to `latest/`. Each push to
 `main` replaces the directory of the version it describes, and nothing else.
-The interpreter is tagged v0.3.0, so the pages are published under `0.3/`,
-which `latest/` follows; `0.1/` and `0.2/` stay as published.
+The interpreter is tagged v0.4.0, so the pages are published under `0.4/`,
+which `latest/` follows; the older versions stay as published.
 
 ## Layout
 

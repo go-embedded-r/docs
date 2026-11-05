@@ -8,7 +8,10 @@ description: "M2, package eval: the design choices, slices 1 and 2 (94 of 210 pr
 
 **Status: slices 1 and 2 of M2 are done**, released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0) (2026-11-04,
-[pull request 8](https://github.com/go-embedded-r/r/pull/8)). Slice 1 was on
+[pull request 8](https://github.com/go-embedded-r/r/pull/8)); the current
+release is [v0.4.0](https://github.com/go-embedded-r/r/releases/tag/v0.4.0)
+([pull request 9](https://github.com/go-embedded-r/r/pull/9)), which bounds the
+session limits by default. Slice 1 was on
 `main` after v0.2.0. M3 onwards is planned. The design is
 [`docs/m2-design.md`](https://github.com/go-embedded-r/r/blob/main/docs/m2-design.md);
 the API is on [Eval API]({{< relref "eval-api" >}}).
