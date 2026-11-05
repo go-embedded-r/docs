@@ -10,8 +10,8 @@ A [Hugo](https://gohugo.io/) site with the [tannevaled/hextra](https://github.co
 fork of the [Hextra](https://github.com/imfing/hextra) theme (pinned to v0.16.0),
 built the same way as the [go-embedded-julia documentation](https://github.com/go-embedded-julia/docs).
 The organization is **in development**: milestones M0 (the oracle harness) and
-M1 (the parser and deparse) are done, and slices 1 and 2 of M2 (the
-evaluator) are done, in go-embedded-r/r v0.4.0; M3 to M8 are planned. The site
+M1 (the parser and deparse) are done, and slices 1 to 3 of M2 (the
+evaluator) are done, in go-embedded-r/r v0.5.0; M3 to M8 are planned. The site
 gives the plan, the parser and deparse with their parity tables against
 R 4.6.2, the evaluator's design and slices, the Eval API, the
 oracle harness, and the licence rule. Every statement comes from the README and
@@ -31,14 +31,14 @@ tagged:
 
 `https://go-embedded-r.github.io/docs/` redirects to `latest/`. Each push to
 `main` replaces the directory of the version it describes, and nothing else.
-The interpreter is tagged v0.4.0, so the pages are published under `0.4/`,
+The interpreter is tagged v0.5.0, so the pages are published under `0.5/`,
 which `latest/` follows; the older versions stay as published.
 
 ## Layout
 
 | Path | What |
 | --- | --- |
-| `content/en/` | the pages; `_index.md` is the home, then the plan, the parser, deparse, the evaluator, the Eval API, the oracle harness and the licences, `weight` orders the sidebar |
+| `content/en/` | the pages; `_index.md` is the home, then the plan, the parser, deparse, the evaluator, the Eval API, regular expressions, the oracle harness and the licences, `weight` orders the sidebar |
 | `i18n/en.yaml` | the site's strings, beside the theme's |
 | `hugo.yaml` | `baseURL`, the packages described, the navbar (version, theme, search, GitHub) |
 | `layouts/_partials/custom/version-select.html` | the version selector (reads `versions.json`) |

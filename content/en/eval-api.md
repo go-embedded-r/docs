@@ -4,10 +4,11 @@ weight: 28
 description: "Package eval: NewSession, Options and its default limits, Eval, EvalContext, EvalIn, Get and Set, Result and Error."
 ---
 
-<!-- From the README of go-embedded-r/r on main (v0.4.0) and the doc comments of eval/session.go. Change the repository first, then here. -->
+<!-- From the README of go-embedded-r/r on main (v0.5.0) and the doc comments of eval/session.go. Change the repository first, then here. -->
 
 The package is `github.com/go-embedded-r/r/eval`, in
-[v0.4.0](https://github.com/go-embedded-r/r/releases/tag/v0.4.0).
+[v0.5.0](https://github.com/go-embedded-r/r/releases/tag/v0.5.0) (bounded by
+default since [v0.4.0](https://github.com/go-embedded-r/r/releases/tag/v0.4.0)).
 
 ```go
 s := eval.NewSession(eval.Options{})   // bounded by default since v0.4.0
@@ -56,7 +57,7 @@ set. A zero field now selects its default:
 | `Parse` | a `syntax.Limits` bounding the source text of an `Eval` | see `syntax.Limits` |
 
 The first three defaults were measured, not guessed (`RGO_MEASURE=1 go test -run
-TestMeasureLimits -v ./eval`): the 819 goldens need at most 8 879 steps, 0.8 MB
+TestMeasureLimits -v ./eval`): the 1 035 goldens need at most 8 879 steps, 0.8 MB
 and 3 ms, and the heaviest cells a notebook runs on purpose (a loop of 10^6
 iterations: 3 million steps, 0.17 s; a list grown by 20 000 assignments: 1.6 GB
 of copies, 0.63 s) set the scale. Each default is about ten times that.
