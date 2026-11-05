@@ -4,19 +4,22 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable R interpreter, in development: v0.4.0 (the Eval limits are bounded by default) completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and slices 1 and 2 of M2 (evaluator); M3 to M8 are planned."
+description: "A pure-Go, embeddable R interpreter, in development: v0.5.0 completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and slices 1 to 3 of M2 (evaluator); its regex is an approximation, not TRE; M3 to M8 are planned."
 ---
 
 **go-embedded-r is in development.
-[v0.4.0](https://github.com/go-embedded-r/r/releases/tag/v0.4.0) (2026-11-05)
+[v0.5.0](https://github.com/go-embedded-r/r/releases/tag/v0.5.0) (2026-11-05)
 of [go-embedded-r/r](https://github.com/go-embedded-r/r) completes milestone M0
 (the oracle harness, against the pinned GNU R 4.6.2), milestone M1 (the
 parser and `deparse`, package `syntax`), which agrees with R's tree, tokens,
 error text and deparse output on 842 of 842 files of R's base packages, and
-slices 1 and 2 of milestone M2.** The evaluator (package `eval`) has 94 of R's
-210 primitives and 32 base closures, with replacement, subsetting, attributes,
-S3 dispatch, conditions and `print`; 819 of 819 goldens match R 4.6.2. M2 is
-not finished. Base, stats, regex,
+slices 1 to 3 of milestone M2.** The evaluator (package `eval`) has 102 of R's
+210 primitives and 94 base closures, with replacement, subsetting, attributes,
+S3 dispatch, conditions, `print`, environments as values, the apply family,
+string functions and regular expressions; 1 035 of 1 035 goldens match R 4.6.2.
+**Its regular expressions are an approximation on Go's `regexp`, not TRE**: see
+[Regular expressions]({{< relref "regex" >}}). M2 is not finished. Base, stats,
+the rest of regex,
 graphics, the notebook bridge, the WebAssembly playground and CRAN ports
 (M3 to M8) are planned and not started. The interpreter is therefore not
 finished.
@@ -43,10 +46,11 @@ The `r` cells of [go-notebook](https://go-notebook.github.io/), the way
 
 | Page | What it holds |
 | --- | --- |
-| [Plan]({{< relref "plan" >}}) | the milestones: M0 and M1 done, M2 slices 1 and 2 done, M3 to M8 planned |
+| [Plan]({{< relref "plan" >}}) | the milestones: M0 and M1 done, M2 slices 1 to 3 done, M3 to M8 planned |
 | [The parser]({{< relref "parser" >}}) | package `syntax`: the API, the tree, the errors, the bounds, and the parity table with R 4.6.2 |
 | [Deparse]({{< relref "deparse" >}}) | `syntax.Deparse`: parity with R 4.6.2 and the platform divergences |
-| [Evaluator]({{< relref "evaluator" >}}) | M2, package `eval`: the design choices, slices 1 and 2 (94 of 210 primitives and 32 base closures), judged by the oracle |
+| [Evaluator]({{< relref "evaluator" >}}) | M2, package `eval`: the design choices, slices 1 to 3 (102 of 210 primitives and 94 base closures), judged by the oracle |
+| [Regular expressions]({{< relref "regex" >}}) | v0.5.0: an approximation on Go's `regexp`, not TRE; what differs from R and what is refused |
 | [Eval API]({{< relref "eval-api" >}}) | `NewSession`, `Options` and its default limits (bounded since v0.4.0), `Eval`, `Result` and `Error` |
 | [The oracle harness]({{< relref "oracle" >}}) | `internal/oracle`, `rds`, `cmd/roracle`, the goldens, and how to get the oracle |
 | [Licences]({{< relref "licences" >}}) | BSD-3-Clause, and what "clean room" means here |
