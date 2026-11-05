@@ -4,11 +4,11 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable R interpreter, in development: v0.3.0 completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and slices 1 and 2 of M2 (evaluator); M3 to M8 are planned."
+description: "A pure-Go, embeddable R interpreter, in development: v0.4.0 (the Eval limits are bounded by default) completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and slices 1 and 2 of M2 (evaluator); M3 to M8 are planned."
 ---
 
 **go-embedded-r is in development.
-[v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0) (2026-11-04)
+[v0.4.0](https://github.com/go-embedded-r/r/releases/tag/v0.4.0) (2026-11-05)
 of [go-embedded-r/r](https://github.com/go-embedded-r/r) completes milestone M0
 (the oracle harness, against the pinned GNU R 4.6.2), milestone M1 (the
 parser and `deparse`, package `syntax`), which agrees with R's tree, tokens,
@@ -47,7 +47,7 @@ The `r` cells of [go-notebook](https://go-notebook.github.io/), the way
 | [The parser]({{< relref "parser" >}}) | package `syntax`: the API, the tree, the errors, the bounds, and the parity table with R 4.6.2 |
 | [Deparse]({{< relref "deparse" >}}) | `syntax.Deparse`: parity with R 4.6.2 and the platform divergences |
 | [Evaluator]({{< relref "evaluator" >}}) | M2, package `eval`: the design choices, slices 1 and 2 (94 of 210 primitives and 32 base closures), judged by the oracle |
-| [Eval API]({{< relref "eval-api" >}}) | `NewSession`, `Options` and the limits an embedder must set, `Eval`, `Result` and `Error` |
+| [Eval API]({{< relref "eval-api" >}}) | `NewSession`, `Options` and its default limits (bounded since v0.4.0), `Eval`, `Result` and `Error` |
 | [The oracle harness]({{< relref "oracle" >}}) | `internal/oracle`, `rds`, `cmd/roracle`, the goldens, and how to get the oracle |
 | [Licences]({{< relref "licences" >}}) | BSD-3-Clause, and what "clean room" means here |
 

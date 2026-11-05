@@ -1,7 +1,7 @@
 ---
 title: "Plan"
 weight: 10
-description: "The milestones: M0 and M1 are done, M2 (evaluator) has slices 1 and 2 done in v0.3.0, M3 to M8 are planned."
+description: "The milestones: M0 and M1 are done, M2 (evaluator) has slices 1 and 2 done (v0.4.0 is current), M3 to M8 are planned."
 ---
 
 <!-- From the README of go-embedded-r/r on main (status table). Change the repository's README first, then here. -->
@@ -9,7 +9,8 @@ description: "The milestones: M0 and M1 are done, M2 (evaluator) has slices 1 an
 **Status: in development.** M0 and M1 are done, and slices 1 and 2 of M2 are
 done, released as
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0) of
-[go-embedded-r/r](https://github.com/go-embedded-r/r) (the parser was
+[go-embedded-r/r](https://github.com/go-embedded-r/r) (v0.4.0 makes the `Eval`
+limits bounded by default, see [Eval API]({{< relref "eval-api" >}}); the parser was
 [v0.1.0](https://github.com/go-embedded-r/r/releases/tag/v0.1.0), deparse
 [v0.2.0](https://github.com/go-embedded-r/r/releases/tag/v0.2.0)). The plan is
 [`bib/r.md`](https://github.com/go-scikit/roadmap/blob/main/bib/r.md) of

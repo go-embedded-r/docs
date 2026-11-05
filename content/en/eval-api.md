@@ -1,16 +1,16 @@
 ---
 title: "Eval API"
 weight: 28
-description: "Package eval: NewSession, Options, Eval, EvalContext, EvalIn, Get and Set, Result and Error, and the limits an embedder must set."
+description: "Package eval: NewSession, Options and its default limits, Eval, EvalContext, EvalIn, Get and Set, Result and Error."
 ---
 
-<!-- From the README of go-embedded-r/r on main (v0.3.0) and the doc comments of eval/session.go. Change the repository first, then here. -->
+<!-- From the README of go-embedded-r/r on main (v0.4.0) and the doc comments of eval/session.go. Change the repository first, then here. -->
 
 The package is `github.com/go-embedded-r/r/eval`, in
-[v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0).
+[v0.4.0](https://github.com/go-embedded-r/r/releases/tag/v0.4.0).
 
 ```go
-s := eval.NewSession(eval.Options{MaxDepth: 5000, MaxVector: 1 << 28, MaxAlloc: 1 << 30, MaxSteps: 0, Timeout: 5 * time.Second})
+s := eval.NewSession(eval.Options{})   // bounded by default since v0.4.0
 res, err := s.Eval("f <- function(x, y = 2) x * y; f(21)")            // one notebook cell
 res, err = s.EvalContext(ctx, src)                                    // the same, cancellable
 res.Value, res.Visible        // the last value, whether R would print it
@@ -40,22 +40,47 @@ the calls itself.
   the global one for a cell that must not leave names behind.
 - `Get(name)` and `Set(name, v)` read and write the global environment.
 
-## Options, and what is off by default
+## Limits: bounded by default
 
-A zero field selects its default. Only two limits have one:
+**Since v0.4.0 the zero `eval.Options{}` is bounded.** This is a breaking
+change: before it, `MaxSteps`, `MaxAlloc` and `Timeout` were unbounded unless
+set. A zero field now selects its default:
 
-| Option | Meaning | Zero value |
+| Option | Meaning | Default |
 | --- | --- | --- |
+| `MaxSteps` | calls and loop iterations evaluated by one `Eval` | **30 000 000** |
+| `MaxAlloc` | bytes of vector storage allocated in total by one `Eval`, copies included | **16 GiB** |
+| `Timeout` | time one `Eval` may take; a context given to `EvalContext` bounds it too | **10 s** |
 | `MaxDepth` | nesting of evaluations (R's `expressions`); beyond it, `evaluation nested too deeply` | **5000** |
-| `MaxVector` | length of any vector the runtime allocates | **1 << 28** |
-| `MaxAlloc` | total bytes of vector storage one `Eval` allocates; beyond it the evaluation ends with an error | **no bound** |
-| `MaxSteps` | number of calls one `Eval` evaluates | **no bound** |
-| `Timeout` | time one `Eval` may take; a context given to `EvalContext` bounds it too | **none** |
+| `MaxVector` | length of any vector the runtime allocates | **2^28** elements |
 | `Parse` | a `syntax.Limits` bounding the source text of an `Eval` | see `syntax.Limits` |
 
-**`MaxAlloc`, `MaxSteps` and `Timeout` are off by default.** An embedder that
-runs cells it did not write must set them: without them a cell can allocate or
-loop for as long as the process lives.
+The first three defaults were measured, not guessed (`RGO_MEASURE=1 go test -run
+TestMeasureLimits -v ./eval`): the 819 goldens need at most 8 879 steps, 0.8 MB
+and 3 ms, and the heaviest cells a notebook runs on purpose (a loop of 10^6
+iterations: 3 million steps, 0.17 s; a list grown by 20 000 assignments: 1.6 GB
+of copies, 0.63 s) set the scale. Each default is about ten times that.
+
+A limit that is hit ends the evaluation with an R error that names it and leaves
+the session usable.
+
+**Opting out is explicit.** To remove a limit, say so: `MaxSteps:
+eval.Unbounded` (also for `MaxAlloc` and `Timeout`; `eval.Unbounded` is `-1`).
+A zero never means unbounded, and any other negative value panics in
+`NewSession`. Use `Unbounded` only for trusted code. A context given to
+`EvalContext` still stops an unbounded session.
+
+The bomb tests (`while (TRUE) 0`, `numeric(1e12)`, `1:1e12`, unbounded
+recursion, an allocation loop) assert a refusal under a Go memory limit, and in
+CI under `ulimit -v`.
+
+### `MaxAlloc` is a budget, not live memory
+
+`MaxAlloc` counts every byte of vector storage one `Eval` allocates, copies
+included, over the whole evaluation. It is a cumulative budget, not the memory
+alive at any moment: a cell can stay far below 16 GiB resident and still spend
+it. The 16 GiB default is sized for a native process. **An embedder with little
+memory, such as a WebAssembly one, should set `MaxAlloc` much lower.**
 
 ## Result and errors
 
