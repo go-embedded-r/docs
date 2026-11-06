@@ -5,7 +5,7 @@
 # minor version among the libraries the pages describe (0.1, 0.2, ...), or
 # "main" while none of them is tagged. The CI sets it through --baseURL, from
 # params.libraries below. This default is the same build.
-baseURL: "https://go-embedded-r.github.io/docs/0.5/"
+baseURL: "https://go-embedded-r.github.io/docs/0.6/"
 title: "go-embedded-r"
 # themes/hextra is the tannevaled/hextra fork, pinned at a release tag:
 # upstream Hextra plus opt-in features (partial menu items, combos,
@@ -72,14 +72,14 @@ menu:
         icon: github
 
 params:
-  description: "go-embedded-r (in development, r v0.5.0: milestones M0, the oracle harness, and M1, the parser with deparse, are done; M2, the evaluator, has slices 1 to 3 done, with regex an approximation on Go's regexp, not TRE; M3 to M8 are planned): an R interpreter in pure Go that can be embedded, for the r cells of go-notebook and its WebAssembly playground."
+  description: "go-embedded-r (in development, r v0.6.0: milestones M0, the oracle harness, and M1, the parser with deparse, are done; M2, the evaluator, has slices 1 to 3 done, with regex on a Go port of TRE; M3 to M8 are planned): an R interpreter in pure Go that can be embedded, for the r cells of go-notebook and its WebAssembly playground."
 
   # The release of each library these pages describe, "main" while it has no
   # tag. The newest minor version among the tagged ones is the documentation's
   # version label (v0.1.2 -> 0.1): the CI reads it here. The interpreter is
-  # tagged v0.5.0, so the documentation is version 0.5.
+  # tagged v0.6.0, so the documentation is version 0.6.
   libraries:
-    r: "v0.5.0"
+    r: "v0.6.0"
   versions:
     # The version selector shows "main" with the development icon.
     development: "main"
