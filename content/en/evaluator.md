@@ -1,20 +1,23 @@
 ---
 title: "Evaluator"
 weight: 27
-description: "M2, package eval: the design choices, slices 1 to 3 (102 of 210 primitives and 94 base closures, 1 035 of 1 035 goldens), judged by the oracle; regex is an approximation, not TRE."
+description: "M2, package eval: the design choices, slices 1 to 3 (102 of 210 primitives and 94 base closures, 1 043 of 1 043 goldens), judged by the oracle; regex is a port of TRE."
 ---
 
-<!-- From the README of go-embedded-r/r on main (v0.5.0) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
+<!-- From the README of go-embedded-r/r on main (v0.6.0) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
 
 **Status: slices 1 to 3 of M2 are done.** Slice 2 was released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0)
 ([pull request 8](https://github.com/go-embedded-r/r/pull/8)); v0.4.0
 ([pull request 9](https://github.com/go-embedded-r/r/pull/9)) bounded the
-session limits by default; the current release is
+session limits by default;
 [v0.5.0](https://github.com/go-embedded-r/r/releases/tag/v0.5.0)
-([pull request 10](https://github.com/go-embedded-r/r/pull/10), 2026-11-05),
-which adds slice 3. **Its regular expressions are an approximation on Go's
-`regexp`, not a port of TRE**; see [Regular expressions]({{< relref "regex" >}}).
+([pull request 10](https://github.com/go-embedded-r/r/pull/10), 2026-11-05)
+added slice 3; the current release is
+[v0.6.0](https://github.com/go-embedded-r/r/releases/tag/v0.6.0)
+([pull request 11](https://github.com/go-embedded-r/r/pull/11), 2026-11-06),
+whose regular expressions are a port of TRE (v0.5.0's were an approximation on
+Go's `regexp`); see [Regular expressions]({{< relref "regex" >}}).
 M3 onwards is planned. The design is
 [`docs/m2-design.md`](https://github.com/go-embedded-r/r/blob/main/docs/m2-design.md);
 the API is on [Eval API]({{< relref "eval-api" >}}).
@@ -95,8 +98,8 @@ rules, type promotion and integer overflow; `c`, `list`, `length`, `is.*`,
   `format`, `toupper`, `tolower`, `casefold`, `chartr`, `trimws`, `startsWith`,
   `endsWith`, `Encoding`, `enc2utf8`, `utf8ToInt`, `intToUtf8`, `validUTF8`);
 - regular expressions (`grepl`, `grep`, `sub`, `gsub`, `regexpr`, `gregexpr`,
-  `regmatches`): POSIX extended syntax with leftmost-longest matching, on Go's
-  `regexp`, **not** a port of TRE (see [Regular expressions]({{< relref "regex" >}})).
+  `regmatches`): POSIX extended syntax with leftmost-longest matching, on a Go
+  port of TRE since v0.6.0 (see [Regular expressions]({{< relref "regex" >}})).
 
 `matrix`, `array`, `letters` and `LETTERS` are there for the tests. Each
 primitive and each of the 94 closures (`print`, `cat`, `paste`, `tryCatch`,
@@ -108,10 +111,10 @@ warnings are R's own: `Error in f(1) : object 'y' not found`.
 
 | Check | Result |
 | --- | --- |
-| goldens: 1 035 snippets of `testdata/eval` (environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **1 035 / 1 035** |
+| goldens: 1 043 snippets of `testdata/eval` (environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **1 043 / 1 043** |
 | differential fuzz, arithmetic, logic and summary (`go run ./cmd/rparity evalfuzz`; seeds 3, 6, 7, 8) | **189 998 / 190 000** |
 | differential fuzz, subsetting and assignment on vectors, lists, matrices and arrays (`evalfuzz --mode subset`; seeds 7, 11, 21) | **35 963 / 36 000** |
-| differential fuzz, regular expressions: random POSIX extended patterns through `grepl`, `sub`, `gsub`, `regexpr`, `gregexpr`, `strsplit`, `regmatches` (`--mode regex`; seeds 1, 21); lazy quantifiers are excluded | **17 993 / 18 000** |
+| differential fuzz, regular expressions: random POSIX extended patterns, with lazy quantifiers, back-references, `\<` `\>` `\b` and non-ASCII text, through `grepl`, `sub`, `gsub`, `regexpr`, `gregexpr`, `strsplit`, `regmatches` (`--mode regex`; seeds 1, 7, 21; nothing excluded) | **60 000 / 60 000** |
 | differential fuzz, character functions: `nchar`, `substr`, `substring`, `toupper`, `trimws`, `strsplit`, `sprintf`, `format`, `chartr` (`--mode strings`; seeds 1, 5, 21) | **20 000 / 20 000** |
 | differential fuzz, `lapply`, `sapply`, `vapply`, `Map`, `mapply`, `Reduce`, `Filter`, `unlist`, `rep`, `seq`, `rev` (`--mode apply`; seeds 3, 21) | **18 000 / 18 000** |
 | `FuzzEval`: random source never panics, hangs or allocates without bound (the corpus keeps the 12 crashers it found) | about 70 million executions in the last runs, clean |
@@ -135,7 +138,9 @@ Of slice 2:
 
 Of slice 3:
 
-- **Regular expressions are an approximation, not TRE**: see
+- **Regular expressions**: TRE's approximate-matching syntax is not ported,
+  non-ASCII classes use Go's Unicode tables, `perl = TRUE` is refused, and
+  `grepl` is 1.44 times slower than R (an open defect); see
   [Regular expressions]({{< relref "regex" >}}).
 - `format` of a factor is not implemented, and `sort` of non-atomic values is
   not implemented.
