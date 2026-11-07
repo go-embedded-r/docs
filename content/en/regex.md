@@ -36,7 +36,7 @@ copied, and the behaviours are judged by R itself.
 | Check | Result |
 | --- | --- |
 | R-level differential fuzz: random POSIX extended patterns, with lazy quantifiers, back-references, `\<` `\>` `\b` and non-ASCII text, through `grepl`, `sub`, `gsub`, `regexpr`, `gregexpr`, `strsplit`, `regmatches` (`--mode regex`; seeds 1, 7, 21; each function reported on its own line; nothing excluded) | **60 000 / 60 000** |
-| goldens of `testdata/eval`, including regular expressions, against R 4.6.2 | **1 043 / 1 043** |
+| goldens of `testdata/eval`, including regular expressions, against R 4.6.2 | **1 154 / 1 154** (v0.7.0) |
 
 The port itself is also checked against upstream TRE; see
 [The tre module]({{< relref "tre" >}}).
@@ -63,8 +63,19 @@ By the fleet rule, slower than the reference is an open defect:
 The other cases of the same table: `gsub` with a class 0.87, `gsub` with a group
 1.13 (also above 1), `regexpr` 0.92, back-references 0.99.
 
+**tre v0.1.1** (2026-11-07, [pull request 7](https://github.com/go-embedded-r/tre/pull/7))
+adds a lazily built DFA for yes/no matches, used when no assertion depends on the
+position, and a start-position skip in the backtracker. Engine level, `go test
+-bench`, 20 000 lines, Apple M4: the `grepl` case `[0-9]+@host[0-9]+\.example`
+went from 5.95 ms to 0.69 ms; a back-reference case from 7.6 ms to 7.2 ms; the
+engines of `regexpr` and `gsub` with a group are unchanged. **The end-to-end
+ratio against R has not been measured since**: the machine's load was far above
+the measuring limit of 8, so the tool refused. Issue 3 stays open until the
+table is measured at load 8 or below; the 1.44 above is the last measured
+figure.
+
 ## Related limits of slice 3
 
-- `format` of a factor is not implemented, and `sort` of non-atomic values is
-  not implemented.
-- `sort` and `ls` order strings by code point, not by locale.
+- `sort` of non-atomic values is not implemented.
+- `sort` and `ls` follow R's ICU collation for Latin text since v0.7.0 (see
+  [M3 plan / base coverage]({{< relref "m3-plan" >}})).

@@ -1,24 +1,35 @@
 ---
 title: "Evaluator"
 weight: 27
-description: "M2, package eval: the design choices, slices 1 to 3 (102 of 210 primitives and 94 base closures, 1 043 of 1 043 goldens), judged by the oracle; regex is a port of TRE."
+description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 1 154 of 1 154 goldens), judged by the oracle; M2 is complete."
 ---
 
-<!-- From the README of go-embedded-r/r on main (v0.6.0) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
+<!-- From the README of go-embedded-r/r on main (v0.7.0) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
 
-**Status: slices 1 to 3 of M2 are done.** Slice 2 was released in
+**Status: M2 is complete (slices 1 to 4)**, in
+[v0.7.0](https://github.com/go-embedded-r/r/releases/tag/v0.7.0)
+([pull request 12](https://github.com/go-embedded-r/r/pull/12), 2026-11-07):
+175 of R's 210 primitives and 110 base closures, 1 154 of 1 154 goldens. The
+other 35 primitives are **refused with an error that says why**
+(`eval.Unsupported`, listed by `go run ./cmd/rparity missing`, not counted as
+implemented): the complex and raw types, S4, formulas and expression vectors,
+foreign calls (`.C`, `.Call`, `.External*`, `.Fortran`, `lazyLoadDBfetch`),
+`.Internal`, and the tracing and debugging primitives. M3, base R, has started:
+see [M3 plan / base coverage]({{< relref "m3-plan" >}}).
+
+History: slice 2 was released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0)
 ([pull request 8](https://github.com/go-embedded-r/r/pull/8)); v0.4.0
 ([pull request 9](https://github.com/go-embedded-r/r/pull/9)) bounded the
 session limits by default;
 [v0.5.0](https://github.com/go-embedded-r/r/releases/tag/v0.5.0)
 ([pull request 10](https://github.com/go-embedded-r/r/pull/10), 2026-11-05)
-added slice 3; the current release is
+added slice 3;
 [v0.6.0](https://github.com/go-embedded-r/r/releases/tag/v0.6.0)
-([pull request 11](https://github.com/go-embedded-r/r/pull/11), 2026-11-06),
-whose regular expressions are a port of TRE (v0.5.0's were an approximation on
+([pull request 11](https://github.com/go-embedded-r/r/pull/11), 2026-11-06)
+made its regular expressions a port of TRE (v0.5.0's were an approximation on
 Go's `regexp`); see [Regular expressions]({{< relref "regex" >}}).
-M3 onwards is planned. The design is
+The design is
 [`docs/m2-design.md`](https://github.com/go-embedded-r/r/blob/main/docs/m2-design.md);
 the API is on [Eval API]({{< relref "eval-api" >}}).
 
@@ -101,23 +112,35 @@ rules, type promotion and integer overflow; `c`, `list`, `length`, `is.*`,
   `regmatches`): POSIX extended syntax with leftmost-longest matching, on a Go
   port of TRE since v0.6.0 (see [Regular expressions]({{< relref "regex" >}})).
 
+**Slice 4** (v0.7.0) completes M2: the rest of the math group (`log` family,
+trigonometric and hyperbolic functions, `gamma` family, `trunc`, `sign`, `round`
+and `signif` with R 4's rounding algorithm), `cumsum`/`cumprod`/`cummax`/`cummin`,
+`range`, `is.finite`/`is.infinite`/`is.nan`, `anyNA`, `nzchar`, `switch`,
+`substitute`, `nargs`, `...length`/`...elt`/`...names`, `call`, `as.call`,
+`forceAndCall`, `::`/`:::` (resolved in the base and global environments),
+`%*%`/`crossprod`/`tcrossprod`, `seq.int`, `proc.time`, and `typeof`, `mode`,
+`deparse`, `as.name`, `unique`, `duplicated`, `match`, `%in%`, `factor`, `levels`,
+`format` of factors. **Collation** is decided and documented: see
+[M3 plan / base coverage]({{< relref "m3-plan" >}}).
+
 `matrix`, `array`, `letters` and `LETTERS` are there for the tests. Each
-primitive and each of the 94 closures (`print`, `cat`, `paste`, `tryCatch`,
+primitive and each of the 110 closures (`print`, `cat`, `paste`, `tryCatch`,
 `structure`, `inherits`, ...) is exercised by the goldens; the rest of the
-primitives raise `could not find function` until their slice. Errors and
+35 primitives that remain are refused with an error that says why. Errors and
 warnings are R's own: `Error in f(1) : object 'y' not found`.
 
 ## Judged by the oracle
 
 | Check | Result |
 | --- | --- |
-| goldens: 1 043 snippets of `testdata/eval` (environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **1 043 / 1 043** |
+| goldens: 1 154 snippets of `testdata/eval` (math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **1 154 / 1 154** |
 | differential fuzz, arithmetic, logic and summary (`go run ./cmd/rparity evalfuzz`; seeds 3, 6, 7, 8) | **189 998 / 190 000** |
 | differential fuzz, subsetting and assignment on vectors, lists, matrices and arrays (`evalfuzz --mode subset`; seeds 7, 11, 21) | **35 963 / 36 000** |
 | differential fuzz, regular expressions: random POSIX extended patterns, with lazy quantifiers, back-references, `\<` `\>` `\b` and non-ASCII text, through `grepl`, `sub`, `gsub`, `regexpr`, `gregexpr`, `strsplit`, `regmatches` (`--mode regex`; seeds 1, 7, 21; nothing excluded) | **60 000 / 60 000** |
 | differential fuzz, character functions: `nchar`, `substr`, `substring`, `toupper`, `trimws`, `strsplit`, `sprintf`, `format`, `chartr` (`--mode strings`; seeds 1, 5, 21) | **20 000 / 20 000** |
 | differential fuzz, `lapply`, `sapply`, `vapply`, `Map`, `mapply`, `Reduce`, `Filter`, `unlist`, `rep`, `seq`, `rev` (`--mode apply`; seeds 3, 21) | **18 000 / 18 000** |
-| `FuzzEval`: random source never panics, hangs or allocates without bound (the corpus keeps the 12 crashers it found) | about 70 million executions in the last runs, clean |
+| differential fuzz, the math group (`--mode math`; seeds 1, 4, 9). **Exclusions, counted:** 5 979 of the last run's 20 000 expressions are libm functions compared through `round(x, 6)`, because their last bit depends on the C library; `digamma`, `trigamma`, `gamma` and `lgamma` at 1e-10 are left out | **20 000 / 20 000** |
+| `FuzzEval`: random source never panics, hangs or allocates without bound (the corpus keeps the 13 crashers it found) | about 70 million executions in the last runs, clean |
 
 ## Known divergences
 
@@ -142,9 +165,12 @@ Of slice 3:
   non-ASCII classes use Go's Unicode tables, `perl = TRUE` is refused, and
   `grepl` is 1.44 times slower than R (an open defect); see
   [Regular expressions]({{< relref "regex" >}}).
-- `format` of a factor is not implemented, and `sort` of non-atomic values is
-  not implemented.
-- `sort` and `ls` order strings by code point, not by locale.
+- `sort` of non-atomic values is not implemented.
+- **Collation** (decided in slice 4): strings sort and compare as R 4.6.2 does
+  under the oracle's `C.UTF-8`, which is ICU order, not code point (punctuation,
+  digits, letters; accents after the plain letter; lowercase before uppercase).
+  Strings outside Latin script compare by code point after the Latin letters, a
+  documented divergence. See [M3 plan / base coverage]({{< relref "m3-plan" >}}).
 - Widths of `sprintf` and `format` above 2^24 are refused. `sprintf("%05d", NA)`
   zero-pads the `NA` as macOS does, where glibc pads with spaces (the C library
   decides in R, so the golden leaves it out).
@@ -167,5 +193,5 @@ From the platform rather than the semantics:
 
 ## Not started
 
-M3 to M8 (base, stats, regex, graphics, notebook bridge, wasm playground, CRAN
-ports) are planned.
+M3 (base R) is in progress. M4 to M8 (stats, graphics, notebook bridge, wasm
+playground, CRAN ports) are planned.
