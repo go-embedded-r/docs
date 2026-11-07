@@ -1,15 +1,17 @@
 ---
 title: "M3 plan / base coverage"
 weight: 26
-description: "M3 (base R, clean room) has started: the plan, the coverage metric (19.8 % of base's 1 362 exports agree with R 4.6.2 at v0.7.0), and how it is measured."
+description: "M3 (base R, clean room) has started: the plan, the coverage metric (22.2 % of base's 1 362 exports agree with R 4.6.2 at v0.8.0), and how it is measured."
 ---
 
-<!-- From docs/m3-plan.md and the README of go-embedded-r/r on main (v0.7.0). Change those first, then here. -->
+<!-- From docs/m3-plan.md and the README of go-embedded-r/r on main (v0.8.1). Change those first, then here. -->
 
 **M3 has started.** M2 gave an evaluator with 175 of R's 210 primitives; M3 is the
 rest of what `library(base)` exports (1 152 closures). The first slice of M3 is
 in [v0.7.0](https://github.com/go-embedded-r/r/releases/tag/v0.7.0)
-([pull request 12](https://github.com/go-embedded-r/r/pull/12)). The plan is
+([pull request 12](https://github.com/go-embedded-r/r/pull/12)); slice 5, which
+starts the base library, is [v0.8.0](https://github.com/go-embedded-r/r/releases/tag/v0.8.0),
+and the current release is v0.8.1. The plan is
 [`docs/m3-plan.md`](https://github.com/go-embedded-r/r/blob/main/docs/m3-plan.md).
 
 ## The metric
@@ -18,6 +20,7 @@ in [v0.7.0](https://github.com/go-embedded-r/r/releases/tag/v0.7.0)
 | --- | --- | --- |
 | v0.6.0 | 196 of 1 362 (102 of the 210 primitives and 94 closures) | **14.4 %** |
 | v0.7.0 | 269 of 1 362 | **19.8 %** |
+| v0.8.0 (slice 5, current in v0.8.1) | 22.2 % of 1 362 | **22.2 %** |
 
 ## How it is measured
 
@@ -64,7 +67,7 @@ frequency ranks nothing.
 | Slice | Contents |
 | --- | --- |
 | 4 (v0.7.0) | the rest of M2: 65 primitives, `factor`, `match`, `unique`, collation |
-| 5 | vectors: `as.vector`, `vector`, `order`, `rank`, `pmax`, `table`, `apply`, `outer`, set operations |
+| 5 (v0.8.0, done: 22.2 %) | vectors: the base library starts. Our own R in `eval/baselib/*.R` (BSD, written from help pages and oracle behaviour: `isTRUE`, `xor`, `Negate`, `setNames`, set operations, `append`, `head`, `tail`, `ifelse`, `nrow`/`ncol`, `lengths`, `rep_len`, `diff`, `outer`) and Go natives (`as.vector`, `order`, `rank`, `pmax`, `pmin`, `which.max`, `which.min`, `tabulate`, row and column sums and means, `t`, `diag`, `mean`, `stopifnot`); 1 202 of 1 202 goldens, vector fuzz 18 000 of 18 000. The rest of the plan's list (`vector`, `rev`, `table`, `apply`, `sweep`, `rowsum`) is not claimed here |
 | 6 | strings and text: the `paste` and `format` families, `sprintf` completion, `iconv`, `cat` options |
 | 7 | conditions and the call stack, restarts, `sys.*`, `match.call`, `match.arg` |
 | 8 | environments and namespaces |

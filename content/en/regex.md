@@ -36,7 +36,7 @@ copied, and the behaviours are judged by R itself.
 | Check | Result |
 | --- | --- |
 | R-level differential fuzz: random POSIX extended patterns, with lazy quantifiers, back-references, `\<` `\>` `\b` and non-ASCII text, through `grepl`, `sub`, `gsub`, `regexpr`, `gregexpr`, `strsplit`, `regmatches` (`--mode regex`; seeds 1, 7, 21; each function reported on its own line; nothing excluded) | **60 000 / 60 000** |
-| goldens of `testdata/eval`, including regular expressions, against R 4.6.2 | **1 154 / 1 154** (v0.7.0) |
+| goldens of `testdata/eval`, including regular expressions, against R 4.6.2 | **1 202 / 1 202** (v0.8.0) |
 
 The port itself is also checked against upstream TRE; see
 [The tre module]({{< relref "tre" >}}).
@@ -53,6 +53,12 @@ The port itself is also checked against upstream TRE; see
   Some other pathological patterns are refused by limits too (pattern size, AST
   nodes, NFA states).
 - **`useBytes`** and the multibyte-locale narrow API are not modelled.
+- **Patterns beyond the compile limits are refused** (tre v0.1.3, in
+  go-embedded-r/r v0.8.1): nesting thousands deep, huge repetition expansion, more
+  than about 2^17 nodes. The call stops with `regular expression '...' is too
+  large for this evaluator` (the engine's `ErrESpace`). No golden or fuzz case
+  reaches these limits, but R compiles some of those patterns, so some extreme
+  patterns R accepts are now refused.
 
 ## Speed: an open defect
 
@@ -73,6 +79,13 @@ ratio against R has not been measured since**: the machine's load was far above
 the measuring limit of 8, so the tool refused. Issue 3 stays open until the
 table is measured at load 8 or below; the 1.44 above is the last measured
 figure.
+
+go-embedded-r/r v0.7.1 also streams the loop of `sub` and `gsub` around the
+engine (matches are streamed, the replacement is parsed once, texts without a
+match ask the engine only for a yes/no, `sub` stops at its first match):
+`BenchmarkGsubGroup`, 20 000 lines, **247k to 87k allocations per operation** and
+9.0 to 4.6 MB per operation. Allocation counts are exact; **no timing against R
+is claimed**, because the load was above the measuring limit.
 
 ## Related limits of slice 3
 
