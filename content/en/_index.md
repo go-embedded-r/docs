@@ -4,24 +4,28 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable R interpreter, in development: v0.6.0 completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and slices 1 to 3 of M2 (evaluator); its regex runs on a Go port of TRE; M3 to M8 are planned."
+description: "A pure-Go, embeddable R interpreter, in development: v0.7.0 completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and M2 (evaluator); M3 (base R) is in progress, 19.8 % of base's exports agreeing with R; M4 to M8 are planned."
 ---
 
 **go-embedded-r is in development.
-[v0.6.0](https://github.com/go-embedded-r/r/releases/tag/v0.6.0) (2026-11-06)
+[v0.7.0](https://github.com/go-embedded-r/r/releases/tag/v0.7.0) (2026-11-07)
 of [go-embedded-r/r](https://github.com/go-embedded-r/r) completes milestone M0
 (the oracle harness, against the pinned GNU R 4.6.2), milestone M1 (the
 parser and `deparse`, package `syntax`), which agrees with R's tree, tokens,
 error text and deparse output on 842 of 842 files of R's base packages, and
-slices 1 to 3 of milestone M2.** The evaluator (package `eval`) has 102 of R's
-210 primitives and 94 base closures, with replacement, subsetting, attributes,
+milestone M2 (slices 1 to 4).** The evaluator (package `eval`) has 175 of R's
+210 primitives and 110 base closures, with replacement, subsetting, attributes,
 S3 dispatch, conditions, `print`, environments as values, the apply family,
-string functions and regular expressions; 1 043 of 1 043 goldens match R 4.6.2.
-Its regular expressions run on [go-embedded-r/tre](https://github.com/go-embedded-r/tre),
-a port of TRE, and agree with R on 60 000 of 60 000 fuzz cases: see
-[Regular expressions]({{< relref "regex" >}}). M2 is not finished. Base, stats,
+string functions, regular expressions, the math group, factors and matching;
+1 154 of 1 154 goldens match R 4.6.2. The other 35 primitives (complex, raw, S4,
+formula and expression types, foreign calls, `.Internal`) are refused with an
+error that says why. Its regular expressions run on
+[go-embedded-r/tre](https://github.com/go-embedded-r/tre), a port of TRE: see
+[Regular expressions]({{< relref "regex" >}}). **M3 (base R, rewritten clean
+room) has started**: 19.8 % of base's 1 362 exports agree with R 4.6.2 (14.4 %
+at v0.6.0), see [M3 plan / base coverage]({{< relref "m3-plan" >}}). Stats,
 graphics, the notebook bridge, the WebAssembly playground and CRAN ports
-(M3 to M8) are planned and not started. The interpreter is therefore not
+(M4 to M8) are planned and not started. The interpreter is therefore not
 finished.
 
 The statements on these pages come from the README of go-embedded-r/r on
@@ -46,11 +50,12 @@ The `r` cells of [go-notebook](https://go-notebook.github.io/), the way
 
 | Page | What it holds |
 | --- | --- |
-| [Plan]({{< relref "plan" >}}) | the milestones: M0 and M1 done, M2 slices 1 to 3 done, M3 to M8 planned |
+| [Plan]({{< relref "plan" >}}) | the milestones: M0 and M1 done, M2 done, M3 in progress, M4 to M8 planned |
+| [M3 plan / base coverage]({{< relref "m3-plan" >}}) | the plan for base R, the coverage metric (19.8 % at v0.7.0) and how it is measured, collation |
 | [The parser]({{< relref "parser" >}}) | package `syntax`: the API, the tree, the errors, the bounds, and the parity table with R 4.6.2 |
 | [Deparse]({{< relref "deparse" >}}) | `syntax.Deparse`: parity with R 4.6.2 and the platform divergences |
-| [Evaluator]({{< relref "evaluator" >}}) | M2, package `eval`: the design choices, slices 1 to 3 (102 of 210 primitives and 94 base closures), judged by the oracle |
-| [Regular expressions]({{< relref "regex" >}}) | v0.6.0: TRE ported to Go, judged by R; what still differs and the open speed defect |
+| [Evaluator]({{< relref "evaluator" >}}) | M2, package `eval`: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures), judged by the oracle |
+| [Regular expressions]({{< relref "regex" >}}) | v0.6.0 and later: TRE ported to Go, judged by R; what still differs and the open speed defect |
 | [The tre module]({{< relref "tre" >}}) | `go-embedded-r/tre` v0.1.0: what it is, BSD 2-Clause with the TRE notice, `RCompat`, how it is checked |
 | [Eval API]({{< relref "eval-api" >}}) | `NewSession`, `Options` and its default limits (bounded since v0.4.0), `Eval`, `Result` and `Error` |
 | [The oracle harness]({{< relref "oracle" >}}) | `internal/oracle`, `rds`, `cmd/roracle`, the goldens, and how to get the oracle |

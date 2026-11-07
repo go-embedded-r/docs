@@ -1,7 +1,7 @@
 ---
 title: "The tre module"
 weight: 30
-description: "go-embedded-r/tre v0.1.0: a pure-Go port of TRE, BSD 2-Clause with the TRE notice kept, with RCompat for R's own copy."
+description: "go-embedded-r/tre v0.1.1: a pure-Go port of TRE, BSD 2-Clause with the TRE notice kept, with RCompat for R's own copy."
 ---
 
 <!-- From the README of go-embedded-r/tre on main (v0.1.0). Change the README first, then here. -->
@@ -21,6 +21,15 @@ m, err := re.ExecString("abcd", 4, 0) // []tre.Match{{0,4},{0,1},{1,4},{4,4}}
 ```
 
 Offsets are in characters (UTF-8 decoded), or bytes with `tre.UseBytes`.
+
+## v0.1.1
+
+[v0.1.1](https://github.com/go-embedded-r/tre/releases/tag/v0.1.1) (2026-11-07,
+[pull request 7](https://github.com/go-embedded-r/tre/pull/7)) adds a lazily
+built DFA for yes/no matches (used when no assertion depends on the position)
+and a start-position skip in the backtracker. Engine-level `grepl` case: 5.95 ms
+to 0.69 ms on 20 000 lines. The speed ratio against R is not yet measured (load
+too high); issue 3 stays open.
 
 ## Licence
 
