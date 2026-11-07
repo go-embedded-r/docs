@@ -1,0 +1,9 @@
+<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="go-embedded-r">
+  <defs><linearGradient id="ejgrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6FA8F5"/><stop offset="1" stop-color="#1F4E9C"/></linearGradient></defs>
+  <rect width="256" height="256" rx="56" fill="url(#ejgrad)"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M98 72V184"/>
+    <path d="M98 72H142A31 31 0 0 1 142 134H98"/>
+    <path d="M136 134L170 184"/>
+  </g>
+</svg>
