@@ -1,10 +1,10 @@
 ---
 title: "M3 plan / base coverage"
 weight: 26
-description: "M3 (base R, clean room) has started: the plan, the coverage metric (26.4 % of base's 1 362 exports agree with R 4.6.2 at v0.11.0), and how it is measured."
+description: "M3 (base R, clean room) has started: the plan, the coverage metric (33.9 % of base's 1 362 exports agree with R 4.6.2 at v0.12.0), and how it is measured."
 ---
 
-<!-- From docs/m3-plan.md and the README of go-embedded-r/r on main (v0.11.0). Change those first, then here. -->
+<!-- From docs/m3-plan.md and the README of go-embedded-r/r on main (v0.12.1). Change those first, then here. -->
 
 **M3 has started.** M2 gave an evaluator with 175 of R's 210 primitives; M3 is the
 rest of what `library(base)` exports (1 152 closures). The first slice of M3 is
@@ -12,8 +12,8 @@ in [v0.7.0](https://github.com/go-embedded-r/r/releases/tag/v0.7.0)
 ([pull request 12](https://github.com/go-embedded-r/r/pull/12)); slice 5, which
 starts the base library, is [v0.8.0](https://github.com/go-embedded-r/r/releases/tag/v0.8.0),
 slice 6 (strings and format) is v0.9.0 and v0.9.1, slice 7 (conditions and the
-call stack) is v0.10.0, slice 8 (environments and namespaces) is v0.11.0, the
-current release. The plan is
+call stack) is v0.10.0, slice 8 (environments and namespaces) is v0.11.0, slice 9 (dates and times) is
+v0.12.0 and v0.12.1, the current release. The plan is
 [`docs/m3-plan.md`](https://github.com/go-embedded-r/r/blob/main/docs/m3-plan.md).
 
 ## The metric
@@ -26,6 +26,7 @@ current release. The plan is
 | v0.9.0 (slice 6, strings) | 23.3 % of 1 362 | **23.3 %** |
 | v0.10.0 (slice 7, conditions and the call stack) | 24.4 % of 1 362 | **24.4 %** |
 | v0.11.0 (slice 8, environments and namespaces) | 360 of 1 362 | **26.4 %** |
+| v0.12.0 (slice 9, dates and times) | 462 of 1 362 | **33.9 %** |
 
 ## How it is measured
 
@@ -76,7 +77,7 @@ frequency ranks nothing.
 | 6 (v0.9.0, v0.9.1, done: 23.3 %) | strings and text: `strrep`, `substr<-`, `strtoi`, `make.unique`, `basename`, `dirname`, `formatC`, `prettyNum`, `toString`, `sQuote`/`dQuote`/`shQuote`, `noquote`, `file.path`; then `format(big.mark =)`, `formatC(format = "fg")`, `match.arg`. Strings fuzz (part 2) 16 000 of 16 000 after the first run's 255 differences were fixed; `sprintf`/`format` fuzz 10 000 of 10 000, no exclusions; 1 252 goldens |
 | 7 (v0.10.0, done: 24.4 %) | conditions and the call stack: `withRestarts`, `computeRestarts`, `findRestart`, `invokeRestart`, `tryInvokeRestart`, `sys.nframe`/`sys.calls`/`sys.frames`/`sys.frame`/`sys.on.exit`, `Recall`, `match.call`, `errorCondition`, `warningCondition`, `geterrmessage`; 1 302 of 1 302 goldens. Four listed divergences, see [Evaluator]({{< relref "evaluator" >}}) |
 | 8 (v0.11.0, done: 26.4 %) | environments and namespaces: locked and active bindings, `get`/`get0`/`exists`/`mget`, generic `as.list`, `eapply`/`with`/`within`/`withVisible`, a one-namespace model for base with `::` and `:::`; no package loading (`library`, `require`, `loadNamespace`, `attach` are not provided yet); 1 570 of 1 570 goldens, env fuzz 15 000 of 15 000 |
-| 9 | dates and times |
+| 9 (v0.12.0, v0.12.1, done: 33.9 %) | dates and times: `Date`, `POSIXct`, `POSIXlt`, `difftime`, `strptime`, `format`, time zones from Go's embedded IANA database; 2 022 of 2 022 goldens at v0.12.0 |
 | 10 | connections and files |
 | 11 | linear algebra and numerics that base exports (depends on go-numerics) |
 | 12 | the complex and raw types, expression vectors, formulas, S4 |
