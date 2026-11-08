@@ -29,7 +29,13 @@ description: "M0: internal/oracle, rds, cmd/roracle and the golden files, and ho
   and promises are refused. The decoder is built for untrusted input: size
   limit after decompression (decompression bombs are refused), nesting limit,
   every claimed length checked against the bytes left before allocating. It is
-  fuzzed (`FuzzDecode`, corpus in `rds/testdata/fuzz`).
+  fuzzed (`FuzzDecode`, corpus in `rds/testdata/fuzz`). Since go-embedded-r/r
+  [pull request 25](https://github.com/go-embedded-r/r/pull/25) an ALTREP object found in a **version-2**
+  stream is expanded, as R's reader does (its `ReadItem` has no version test,
+  while `WriteItem` emits ALTREP only for version 3 or later), so the decoded tree
+  is always writable by the version-2 encoder; an unknown ALTREP class is a decode
+  error, and the expansion is bounded by a cumulative budget of `MaxBytes/8`
+  elements. Version 3 is unchanged.
 - **`cmd/roracle`** regenerates the golden files (`roracle regen`), prints the
   identity of the R that answers (`roracle version`) and evaluates a snippet
   (`roracle eval 'expr'`).

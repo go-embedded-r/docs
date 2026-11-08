@@ -36,7 +36,7 @@ copied, and the behaviours are judged by R itself.
 | Check | Result |
 | --- | --- |
 | R-level differential fuzz: random POSIX extended patterns, with lazy quantifiers, back-references, `\<` `\>` `\b` and non-ASCII text, through `grepl`, `sub`, `gsub`, `regexpr`, `gregexpr`, `strsplit`, `regmatches` (`--mode regex`; seeds 1, 7, 21; each function reported on its own line; nothing excluded) | **60 000 / 60 000** |
-| goldens of `testdata/eval`, including regular expressions, against R 4.6.2 | **1 202 / 1 202** (v0.8.0) |
+| goldens of `testdata/eval`, including regular expressions, against R 4.6.2 | **1 302 / 1 302** (v0.10.0) |
 
 The port itself is also checked against upstream TRE; see
 [The tre module]({{< relref "tre" >}}).
@@ -86,6 +86,15 @@ match ask the engine only for a yes/no, `sub` stops at its first match):
 `BenchmarkGsubGroup`, 20 000 lines, **247k to 87k allocations per operation** and
 9.0 to 4.6 MB per operation. Allocation counts are exact; **no timing against R
 is claimed**, because the load was above the measuring limit.
+
+## Memory: bounded on every target
+
+tre's README has a "Limits and memory" section: the compile limits (`MaxPattern`
+65 536, `MaxNodes` 2^17, `MaxStates` and `MaxTransitions` 2^19, `MaxSetItems`
+2^17, `MaxSteps` 2^28) and a lazy DFA capped at 2 048 states. Measured peaks:
+**every bomb test stays under 256 MiB on every target, wasm included**, asserted by
+the tests; the whole bomb suite peaks at 124 MiB under wazero. Before tre v0.1.3
+the deep-nesting pattern took 3.5 GiB. See [The tre module]({{< relref "tre" >}}).
 
 ## Related limits of slice 3
 
