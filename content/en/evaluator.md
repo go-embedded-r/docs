@@ -1,10 +1,10 @@
 ---
 title: "Evaluator"
 weight: 27
-description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 1 202 of 1 202 goldens at v0.8.1), judged by the oracle; M2 is complete, and M3 has added the first base library."
+description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 1 302 of 1 302 goldens at v0.10.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings and conditions."
 ---
 
-<!-- From the README of go-embedded-r/r on main (v0.8.1) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
+<!-- From the README of go-embedded-r/r on main (v0.10.0) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
 
 **Status: M2 is complete (slices 1 to 4)**, in
 [v0.7.0](https://github.com/go-embedded-r/r/releases/tag/v0.7.0)
@@ -27,6 +27,14 @@ starts the base library: our own R in `eval/baselib/*.R` (BSD, clean room) plus
 Go natives, **1 202 of 1 202 goldens**, vector fuzz 18 000 of 18 000, base
 coverage 22.2 %. v0.8.1
 ([pull request 16](https://github.com/go-embedded-r/r/pull/16)) takes tre v0.1.3.
+v0.8.2 ([pull request 18](https://github.com/go-embedded-r/r/pull/18)) makes
+arithmetic, comparison and `&`/`|` on two arrays with different dims raise R's
+`non-conformable arrays`, and an array against a longer vector raise `dims
+[product n] do not match the length of object [m]` (zero-length arrays are fine,
+as in R); it also keeps dimnames padding in step (both were FuzzEval crashers).
+v0.9.0 and v0.9.1 (slice 6) add the string and format functions. v0.10.0 (slice 7)
+adds restarts and the call stack, **1 302 of 1 302 goldens**, base coverage 24.4 %
+(23.3 % at v0.9.0). Slices 6 and 7 are described below.
 
 History: slice 2 was released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0)
@@ -134,6 +142,23 @@ and `signif` with R 4's rounding algorithm), `cumsum`/`cumprod`/`cummax`/`cummin
 `format` of factors. **Collation** is decided and documented: see
 [M3 plan / base coverage]({{< relref "m3-plan" >}}).
 
+**Slice 7** (M3, v0.10.0) adds restarts (`withRestarts` with functions and
+arguments, `computeRestarts`, `findRestart`, `invokeRestart(r, ...)`,
+`tryInvokeRestart`), the call stack (`sys.nframe`, `sys.calls`, `sys.frames`,
+`sys.frame`, `sys.on.exit`), `Recall`, `match.call` (positional, partial and exact
+matching, `...` expanded from the caller, `expand.dots`), `errorCondition`,
+`warningCondition`, `geterrmessage`, and `$` on a call. A calling handler or
+`finally` no longer changes the visibility of the value.
+
+**Slice 6** (M3, v0.9.0 and v0.9.1) adds string functions: `strrep`, `substr<-`,
+`strtoi`, `make.unique`, `basename`, `dirname`, `formatC` (formats `d`, `f`, `e`,
+`g`, `s`; flags `-`, `0`, `+`, space; `big.mark`; negative width), `prettyNum`,
+`toString`, `sQuote`/`dQuote` (curly quotes, as the oracle's UTF-8 locale gives),
+`shQuote`, `noquote` and `print(quote = FALSE)`, `file.path`; part 2 adds
+`format(big.mark =)`, `formatC(mode =, format = "fg")`, `shQuote(type = "csh"/"cmd"/"cmd2")`
+and `match.arg`, and `sprintf("%#x", 0)` prints no prefix, as C does. Text produced
+by `sprintf`, `formatC` and `strrep` counts against `MaxAlloc`.
+
 **Slice 5** (M3, v0.8.0) starts the base library. `eval/baselib/*.R` is base R's
 glue written by us, BSD, under the clean-room rule of the M3 plan (`isTRUE`,
 `isFALSE`, `xor`, `Negate`, `setNames`, `union`, `intersect`, `setdiff`,
@@ -154,7 +179,9 @@ warnings are R's own: `Error in f(1) : object 'y' not found`.
 
 | Check | Result |
 | --- | --- |
-| goldens: 1 154 snippets of `testdata/eval` (vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **1 202 / 1 202** (v0.8.0; 1 154 at v0.7.0) |
+| goldens: 1 302 snippets of `testdata/eval` (vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **1 302 / 1 302** (v0.10.0; 1 202 at v0.8.0, 1 154 at v0.7.0) |
+| differential fuzz, `sprintf` and `format`, extended with 20 more formats (v0.9.1; seed 7; no exclusions) | **10 000 / 10 000** |
+| differential fuzz, strings part 2: `strrep`, `substr<-`, `strtoi`, `make.unique`, `basename`, `dirname`, `formatC`, `prettyNum`, `toString`, `sQuote`/`dQuote`/`shQuote`, `noquote`, `file.path` (`--mode strings2`; seeds 1, 3; no exclusions) | **16 000 / 16 000** (after the first run's 255 differences in 6 000 were fixed) |
 | differential fuzz, arithmetic, logic and summary (`go run ./cmd/rparity evalfuzz`; seeds 3, 6, 7, 8) | **189 998 / 190 000** |
 | differential fuzz, subsetting and assignment on vectors, lists, matrices and arrays (`evalfuzz --mode subset`; seeds 7, 11, 21) | **35 963 / 36 000** |
 | differential fuzz, regular expressions: random POSIX extended patterns, with lazy quantifiers, back-references, `\<` `\>` `\b` and non-ASCII text, through `grepl`, `sub`, `gsub`, `regexpr`, `gregexpr`, `strsplit`, `regmatches` (`--mode regex`; seeds 1, 7, 21; nothing excluded) | **60 000 / 60 000** |
@@ -181,8 +208,23 @@ Of slice 2:
   of running for ever. `print` of list elements dispatches only to the methods R
   registers itself (factor, condition), as R does.
 
+Of slice 7 (v0.10.0), all because R runs `tryCatch` and `try` through closures
+we do not have:
+
+- the `conditionCall` of a `stop()` made directly inside `try()` or `tryCatch()`
+  at top level is empty here, and R's internal call there (`doTryCatch(...)`,
+  `try(...)`);
+- `match.call(expand.dots = FALSE)` keeps `...` as a list where R keeps a pairlist
+  (`deparse` shows `list(` for `pairlist(`);
+- absolute frame numbers differ from the oracle's, which runs each snippet inside
+  its own harness frames, so the goldens compare numbers of frames relative to a
+  starting point;
+- `computeRestarts` has no top-level `abort` restart.
+
 Of slice 5 (v0.8.0):
 
+- **A matrix whose `dimnames` carry names** (`names(dimnames(x))`, as `table()`
+  makes) prints without the variable-name header lines R adds.
 - **`lgamma`, `digamma` and `trigamma` are less accurate than R's**: an open
   defect, [issue 14](https://github.com/go-embedded-r/r/issues/14); the fuzz
   compares them through `signif(x, 12)` and counts them.

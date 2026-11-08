@@ -75,11 +75,35 @@ where they differ from upstream, so that `go-embedded-r/r` answers like R:
 R's changes are GPL and were used as specification only; the behaviours are
 re-implemented and judged by R itself.
 
-## Resource limits
+## Limits and memory
 
-Pattern size, AST nodes, NFA states and transitions, the size of the
-firstpos/lastpos sets, and match steps. A hostile pattern or subject gets an
-error (`ErrESpace`, `ErrSteps`), never an out-of-memory or a hang.
+A hostile pattern or subject gets an error (`ErrESpace`, `ErrSteps`), never an
+out-of-memory or a hang. The limits ([pull request 10](https://github.com/go-embedded-r/tre/pull/10)
+documents them in the README):
+
+| Limit | Default | Bounds |
+| --- | --- | --- |
+| `MaxPattern` | 65 536 | pattern length in code units |
+| `MaxNodes` | 2^17 | AST nodes, including bounded-repetition copies |
+| `MaxStates` | 2^19 | NFA positions |
+| `MaxTransitions` | 2^19 | NFA transitions |
+| `MaxSetItems` | 2^17 | firstpos/lastpos entries, and the parent lists of nested groups |
+| `MaxSteps` | 2^28 | work of one match (`ErrSteps`); mainly for back-references |
+
+The lazy DFA that answers yes/no matches is capped too: at most 2 048 DFA states
+and 2^18 NFA-state entries over all of them (about 2 MiB). At either cap it is
+switched off for that regexp and the NFA matcher answers, with the same result.
+
+A pattern over a limit is refused with `ErrESpace`. This includes some patterns
+that R accepts: very deep group nesting (thousands of levels) and very large
+repetition expansions such as `((a{255}){255}){255}`.
+
+**Memory guarantee.** Measured peaks (the Go runtime's `Sys` high-water mark over
+the bomb tests; nested counts, quadratic sets, 30 000 nested groups, a 2^20-state
+DFA, exponential back-reference backtracking): **every bomb stays under 256 MiB on
+every target, wasm included**, asserted by the tests (`peak_test.go`). The whole
+bomb suite peaks at 124 MiB under wazero, and the DFA bomb alone at 17 MiB
+natively. Before v0.1.3 the deep-nesting pattern took 3.5 GiB.
 
 ## How it is checked
 
