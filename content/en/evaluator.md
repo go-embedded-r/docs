@@ -1,10 +1,10 @@
 ---
 title: "Evaluator"
 weight: 27
-description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 1 570 of 1 570 goldens at v0.11.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments and namespaces."
+description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 2 028 of 2 028 goldens at v0.12.1), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
 ---
 
-<!-- From the README of go-embedded-r/r on main (v0.11.0) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
+<!-- From the README of go-embedded-r/r on main (v0.12.1) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
 
 **Status: M2 is complete (slices 1 to 4)**, in
 [v0.7.0](https://github.com/go-embedded-r/r/releases/tag/v0.7.0)
@@ -38,7 +38,13 @@ adds restarts and the call stack, **1 302 of 1 302 goldens**, base coverage 24.4
 ([pull request 27](https://github.com/go-embedded-r/r/pull/27), 2026-11-08, slice
 8) adds environments and a one-namespace model: **1 570 of 1 570 goldens**, env
 fuzz 15 000 of 15 000, base coverage 26.4 % (360 of 1 362). Slices 6 to 8 are
-described below.
+described below. v0.12.0 (2026-11-08,
+[pull request 28](https://github.com/go-embedded-r/r/pull/28), slice 9) adds dates
+and times: **2 022 of 2 022 goldens**, base coverage 33.9 % (462 of 1 362).
+v0.12.1 ([pull request 29](https://github.com/go-embedded-r/r/pull/29)) marks the
+goldens that were recorded on macOS as platform goldens and reproduces how R
+computes `%s`; the README then counts 2 028 goldens, 9 of them macOS-only.
+A further release, v0.12.2, is pending and not described here.
 
 History: slice 2 was released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0)
@@ -146,6 +152,30 @@ and `signif` with R 4's rounding algorithm), `cumsum`/`cumprod`/`cummax`/`cummin
 `format` of factors. **Collation** is decided and documented: see
 [M3 plan / base coverage]({{< relref "m3-plan" >}}).
 
+**Slice 9** (M3, v0.12.0 and v0.12.1) adds dates and times. **Classes**: `Date`,
+`POSIXct`, `POSIXlt` (a list of the 11 components with `tzone` and `balanced`),
+`difftime`. **Functions**: `Sys.time`, `Sys.Date`, `as.Date`, `as.POSIXct`,
+`as.POSIXlt` (character with `format` and `tryFormats`, numeric with `origin`,
+`Date`, between classes, factors), `strptime` (every conversion R's help page
+lists, `%OS`, `%z`, 24:00, names matched without case, trailing text ignored),
+`format`/`strftime`/`as.character` (`usetz`, `digits`, `%OSn`,
+`options(digits.secs)`), `ISOdate`, `ISOdatetime`, `weekdays`, `months`,
+`quarters`, `julian`, `difftime`, `as.difftime`, `units`, `units<-`, `format` and
+`print` of differences, `seq.Date` (day, week, month, quarter, year, a number, a
+difftime), `c`, `[`, `[[`, `[<-`, `rep`, `rev`, `sort`, `unique`, `mean`,
+`range`, `diff` on all three classes, arithmetic, comparisons and
+`Math`/`Summary` of `difftime` with R's rules. Non-finite times are kept apart as
+R 4.2 does. **Time zones** come from Go's embedded IANA database (`time/tzdata`,
+about 450 KB in the binary): `tz = ""` is the session's zone, the `TZ` variable
+else the system's (the oracle runs with `TZ=UTC` and so do the goldens); a
+repeated local hour reads as its first occurrence, as R's does. Support added on
+the way: `options`, `getOption`, `deparse1`, `gettext`, `gettextf`, `rep.int`,
+`is.factor`, `pmatch`, `unname`; `as.character` and `paste` of a factor give its
+labels; `print` forwards its arguments to the method; `deparse` writes
+attributes as `structure(...)`. `NewSession` now costs 56 µs and 1 091
+allocations (626 at v0.11.0), measured at 1-minute load 5: `datetime.R` alone is
+420 allocations, 110 closures defined eagerly at session start.
+
 **Slice 8** (M3, v0.11.0) adds environments and a one-namespace model.
 **Bindings**: `lockBinding`, `unlockBinding`, `bindingIsLocked`,
 `lockEnvironment(bindings =)`, `environmentIsLocked`, `makeActiveBinding`,
@@ -204,8 +234,9 @@ warnings are R's own: `Error in f(1) : object 'y' not found`.
 
 | Check | Result |
 | --- | --- |
-| goldens: 1 570 snippets of `testdata/eval` (vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **1 570 / 1 570** (v0.11.0; 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
-| differential fuzz, environments (`--mode env`; seeds 1, 2, 3, 5 000 programs each): `get`, `exists`, `get0`, `mget` with modes, `inherits` and `ifnotfound`; `assign`, `$<-`, `[[<-`, `local`, `evalq` into locked bindings and environments; `rm`; the lock functions; active bindings; `delayedAssign`; `as.list`, `eapply`, `with`, `within`; the namespace functions; `::`, `:::`; `topenv`, `environmentName`. **Nothing is compared more weakly.** Blind spots, left out of the generator by construction: closures as values (R prints their environment's address), the printed text of a builtin found in base (our `print` shows no formals), the packages R installs besides base, and listings in hash order (the fuzz always sorts) | **15 000 / 15 000** |
+| goldens: 2 028 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **2 028 / 2 028** (v0.12.1; 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
+| differential fuzz, environments (`--mode env`; seeds 1, 2, 3, 5 000 programs each): `get`, `exists`, `get0`, `mget` with modes, `inherits` and `ifnotfound`; `assign`, `$<-`, `[[<-`, `local`, `evalq` into locked bindings and environments; `rm`; the lock functions; active bindings; `delayedAssign`; `as.list`, `eapply`, `with`, `within`; the namespace functions; `::`, `:::`; `topenv`, `environmentName`. **Exclusions, generated on purpose and counted (1 858 of the 15 000 programs, not in the figure)**: 473 print an environment's address (compared with the address replaced, 0 differ), 458 print a builtin (our `print` shows no formals; compared as `.Primitive("name")`, 0 differ), 485 use a package R installs besides base (compared exactly: 363 differ, the divergence of slice 8), 442 list a hashed environment unsorted (compared exactly: 210 differ, R's order is undefined) | **13 142 / 13 142** compared, plus the exclusions above |
+| differential fuzz, dates and times (`--mode datetime`; seeds 1, 2, 3, 6 000 programs each): formatting with 40 conversions (`%s` included), parsing, `POSIXlt` fields, round trips through text, `difftime` in every unit, arithmetic and comparison on `Date`/`POSIXct`/`difftime`, `seq` by day, week, month, quarter, year, `c`, `rep`, `rev`, `sort`, `unique`, time zone conversion in 8 zones; years 1971 to 2037, never 01:00 to 03:59 local. **Exclusions, generated on purpose and counted (1 848 of the 18 000 programs, not in the figure; these exclusions are under review and are not final)**: 462 in years before 1902 (R warns once per session, so the warning is not compared; the rest is, 0 differ), 463 in years after 2037 in zones with daylight saving (compared exactly, 0 differ), 445 `tzone` attributes of zones with unusual daylight abbreviations (compared exactly, 56 differ), 478 local times that a daylight-saving change skips or repeats (compared exactly, 64 differ) | **16 152 / 16 152** compared, plus the exclusions above |
 | differential fuzz, `sprintf` and `format`, extended with 20 more formats (v0.9.1; seed 7; no exclusions) | **10 000 / 10 000** |
 | differential fuzz, strings part 2: `strrep`, `substr<-`, `strtoi`, `make.unique`, `basename`, `dirname`, `formatC`, `prettyNum`, `toString`, `sQuote`/`dQuote`/`shQuote`, `noquote`, `file.path` (`--mode strings2`; seeds 1, 3; no exclusions) | **16 000 / 16 000** (after the first run's 255 differences in 6 000 were fixed) |
 | differential fuzz, arithmetic, logic and summary (`go run ./cmd/rparity evalfuzz`; seeds 3, 6, 7, 8) | **189 998 / 190 000** |
@@ -233,6 +264,30 @@ Of slice 2:
 - Printing an array with more than 2^20 slices or 2^22 rows is refused instead
   of running for ever. `print` of list elements dispatches only to the methods R
   registers itself (factor, condition), as R does.
+
+Of slice 9 (v0.12.0 and v0.12.1):
+
+- The C locale only (English names, `%x` is `%m/%d/%y`, `%c` the C form; `%E`
+  and `%O` modifiers read as the plain conversion).
+- R's warning `datetimes before 1902 may not be accurate` (once per session) is
+  never given.
+- The daylight abbreviation in the `tzone` attribute of a zone with unusual or no
+  daylight time is found by scanning Go's transitions and differs from R's for
+  some zones (56 of 445 fuzz cases: the attribute has three elements, the first is
+  always right).
+- Of the local times that a daylight-saving change skips or repeats, ours read as
+  R's in most cases, and 64 of 478 fuzz cases differ.
+- `%s` is not the epoch time on macOS: R gives the fields read as UTC unless the
+  format also has `%z` or `%Z`, in which case it subtracts the zone's offset. That
+  is reproduced exactly (the 9 goldens of `platform_darwin.R`, the fuzz). Whether
+  glibc does the same is not known, so those goldens are not compared on Linux.
+- The call shown in an error from a long `structure(...)` breaks its lines where
+  R does not.
+- `Date` and `POSIXct` have no `round`, `trunc`, `cut`, `summary`, `seq.POSIXt`,
+  `Sys.setenv`, `Sys.timezone`, `OlsonNames`, and there are no data frames yet, so
+  no date columns.
+
+The exclusions of the datetime fuzz are under review and are not final.
 
 Of slice 8 (v0.11.0):
 
