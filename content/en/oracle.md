@@ -30,7 +30,9 @@ description: "M0: internal/oracle, rds, cmd/roracle and the golden files, and ho
   limit after decompression (decompression bombs are refused), nesting limit,
   every claimed length checked against the bytes left before allocating. It is
   fuzzed (`FuzzDecode`, corpus in `rds/testdata/fuzz`). Since go-embedded-r/r
-  [pull request 25](https://github.com/go-embedded-r/r/pull/25) an ALTREP object found in a **version-2**
+  [pull request 25](https://github.com/go-embedded-r/r/pull/25), which
+  **shipped in v0.10.0** (the tag at c1e0bd8 came after pull requests 25 and 26
+  were merged), an ALTREP object found in a **version-2**
   stream is expanded, as R's reader does (its `ReadItem` has no version test,
   while `WriteItem` emits ALTREP only for version 3 or later), so the decoded tree
   is always writable by the version-2 encoder; an unknown ALTREP class is a decode

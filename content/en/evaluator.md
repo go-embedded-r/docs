@@ -1,10 +1,10 @@
 ---
 title: "Evaluator"
 weight: 27
-description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 1 302 of 1 302 goldens at v0.10.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings and conditions."
+description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 1 570 of 1 570 goldens at v0.11.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments and namespaces."
 ---
 
-<!-- From the README of go-embedded-r/r on main (v0.10.0) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
+<!-- From the README of go-embedded-r/r on main (v0.11.0) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
 
 **Status: M2 is complete (slices 1 to 4)**, in
 [v0.7.0](https://github.com/go-embedded-r/r/releases/tag/v0.7.0)
@@ -34,7 +34,11 @@ arithmetic, comparison and `&`/`|` on two arrays with different dims raise R's
 as in R); it also keeps dimnames padding in step (both were FuzzEval crashers).
 v0.9.0 and v0.9.1 (slice 6) add the string and format functions. v0.10.0 (slice 7)
 adds restarts and the call stack, **1 302 of 1 302 goldens**, base coverage 24.4 %
-(23.3 % at v0.9.0). Slices 6 and 7 are described below.
+(23.3 % at v0.9.0). v0.11.0
+([pull request 27](https://github.com/go-embedded-r/r/pull/27), 2026-11-08, slice
+8) adds environments and a one-namespace model: **1 570 of 1 570 goldens**, env
+fuzz 15 000 of 15 000, base coverage 26.4 % (360 of 1 362). Slices 6 to 8 are
+described below.
 
 History: slice 2 was released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0)
@@ -142,6 +146,27 @@ and `signif` with R 4's rounding algorithm), `cumsum`/`cumprod`/`cummax`/`cummin
 `format` of factors. **Collation** is decided and documented: see
 [M3 plan / base coverage]({{< relref "m3-plan" >}}).
 
+**Slice 8** (M3, v0.11.0) adds environments and a one-namespace model.
+**Bindings**: `lockBinding`, `unlockBinding`, `bindingIsLocked`,
+`lockEnvironment(bindings =)`, `environmentIsLocked`, `makeActiveBinding`,
+`bindingIsActive`, `activeBindingFunction`, `delayedAssign`; every assignment
+(`<-`, `<<-`, `assign`, `$<-`, `[[<-`, `list2env`, replacement forms) honours locks
+and runs active bindings, with R's messages and calls; the base environment and
+all its bindings are locked as in R (`assign("sum", 1, baseenv())` is refused).
+`rm` takes `inherits`; `get`/`get0`/`exists`/`mget` take `mode`, `inherits` and
+`ifnotfound` and give R's messages; `exists` does not force a promise. `as.list` is
+generic (`as.list.environment` with `all.names` and `sorted`, `.default`,
+`.function`, `.factor`); `eapply`, `with`, `within` (lists), `withVisible`,
+`names(env)`. Environments carry attributes, so S3 dispatch works on them.
+**Namespaces**: `asNamespace`, `getNamespace`, `isNamespace`, `isBaseNamespace`,
+`getNamespaceName`, `getNamespaceExports`, `isNamespaceLoaded`, `requireNamespace`,
+`.BaseNamespaceEnv`, `.GlobalEnv`, `topenv`, `::` and `:::`. The namespace of base
+is an environment of its own (printed `<environment: namespace:base>`, enclosed by
+the global environment) that shares the base frame. Errors raised directly under
+`eval`, `evalq`, `local` and `with` report R's call. An active binding that read
+itself used to overflow the Go stack; it is fixed, with a corpus entry and a bomb
+test.
+
 **Slice 7** (M3, v0.10.0) adds restarts (`withRestarts` with functions and
 arguments, `computeRestarts`, `findRestart`, `invokeRestart(r, ...)`,
 `tryInvokeRestart`), the call stack (`sys.nframe`, `sys.calls`, `sys.frames`,
@@ -179,7 +204,8 @@ warnings are R's own: `Error in f(1) : object 'y' not found`.
 
 | Check | Result |
 | --- | --- |
-| goldens: 1 302 snippets of `testdata/eval` (vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **1 302 / 1 302** (v0.10.0; 1 202 at v0.8.0, 1 154 at v0.7.0) |
+| goldens: 1 570 snippets of `testdata/eval` (vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **1 570 / 1 570** (v0.11.0; 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
+| differential fuzz, environments (`--mode env`; seeds 1, 2, 3, 5 000 programs each): `get`, `exists`, `get0`, `mget` with modes, `inherits` and `ifnotfound`; `assign`, `$<-`, `[[<-`, `local`, `evalq` into locked bindings and environments; `rm`; the lock functions; active bindings; `delayedAssign`; `as.list`, `eapply`, `with`, `within`; the namespace functions; `::`, `:::`; `topenv`, `environmentName`. **Nothing is compared more weakly.** Blind spots, left out of the generator by construction: closures as values (R prints their environment's address), the printed text of a builtin found in base (our `print` shows no formals), the packages R installs besides base, and listings in hash order (the fuzz always sorts) | **15 000 / 15 000** |
 | differential fuzz, `sprintf` and `format`, extended with 20 more formats (v0.9.1; seed 7; no exclusions) | **10 000 / 10 000** |
 | differential fuzz, strings part 2: `strrep`, `substr<-`, `strtoi`, `make.unique`, `basename`, `dirname`, `formatC`, `prettyNum`, `toString`, `sQuote`/`dQuote`/`shQuote`, `noquote`, `file.path` (`--mode strings2`; seeds 1, 3; no exclusions) | **16 000 / 16 000** (after the first run's 255 differences in 6 000 were fixed) |
 | differential fuzz, arithmetic, logic and summary (`go run ./cmd/rparity evalfuzz`; seeds 3, 6, 7, 8) | **189 998 / 190 000** |
@@ -207,6 +233,24 @@ Of slice 2:
 - Printing an array with more than 2^20 slices or 2^22 rows is refused instead
   of running for ever. `print` of list elements dispatches only to the methods R
   registers itself (factor, condition), as R does.
+
+Of slice 8 (v0.11.0):
+
+- **There is no package loading**: no `library`, `require`, `loadNamespace`,
+  `attach`, `search`, `sys.source` (planned with the slices that need them).
+- The installed packages other than base (`stats`, `utils`, ...) resolve through
+  our base environment (`utils::head` works, `stats::sd` is "'sd' is not an
+  exported object"), and any other name is `there is no package called ‘x’`.
+- `parent.env(globalenv())` is base; R's is the last attached package.
+- `as.list.environment` and `names(env)` list in creation order, where R's hashed
+  order is unspecified.
+- `sys.call()` and `parent.frame()` inside `eval`/`local` do not see R's eval
+  frame.
+- The text `requireNamespace("foo")` writes without `quiet` was read from the
+  oracle, not goldened (its harness adds a connection warning).
+- `print` of an environment does not list its attributes.
+- `getNamespace(<environment>)` raises R's message with another call.
+- `within` has no data frame method.
 
 Of slice 7 (v0.10.0), all because R runs `tryCatch` and `try` through closures
 we do not have:
