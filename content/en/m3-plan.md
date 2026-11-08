@@ -4,7 +4,7 @@ weight: 26
 description: "M3 (base R, clean room) has started: the plan, the coverage metric (33.9 % of base's 1 362 exports agree with R 4.6.2 at v0.12.0), and how it is measured."
 ---
 
-<!-- From docs/m3-plan.md and the README of go-embedded-r/r on main (v0.12.1). Change those first, then here. -->
+<!-- From docs/m3-plan.md and the README of go-embedded-r/r on main (v0.12.2). Change those first, then here. -->
 
 **M3 has started.** M2 gave an evaluator with 175 of R's 210 primitives; M3 is the
 rest of what `library(base)` exports (1 152 closures). The first slice of M3 is
@@ -55,6 +55,9 @@ time the plan was written. Base's calls to `.Internal` are spread flat, so their
 frequency ranks nothing.
 
 ## The clean-room rule for base functions
+
+Since v0.12.2 the rule is enforced by a similarity gate, an oracle guard and a
+provenance record: see [Clean room]({{< relref "clean-room" >}}).
 
 - **Specification**: R's documentation and the observed behaviour of the oracle.
 - **Never read, never copied**: the files of `src/library/base/R`, `src/main`,

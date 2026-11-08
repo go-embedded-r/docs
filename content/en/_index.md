@@ -4,11 +4,11 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable R interpreter, in development: v0.12.1 completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and M2 (evaluator); M3 (base R) is in progress, 33.9 % of base's exports agreeing with R; M4 to M8 are planned."
+description: "A pure-Go, embeddable R interpreter, in development: v0.12.2 completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and M2 (evaluator); M3 (base R) is in progress, 33.9 % of base's exports agreeing with R; M4 to M8 are planned."
 ---
 
 **go-embedded-r is in development.
-[v0.12.1](https://github.com/go-embedded-r/r/releases/tag/v0.12.1) (2026-11-08)
+[v0.12.2](https://github.com/go-embedded-r/r/releases/tag/v0.12.2) (2026-11-08)
 of [go-embedded-r/r](https://github.com/go-embedded-r/r) completes milestone M0
 (the oracle harness, against the pinned GNU R 4.6.2), milestone M1 (the
 parser and `deparse`, package `syntax`), which agrees with R's tree, tokens,
@@ -56,6 +56,7 @@ The `r` cells of [go-notebook](https://go-notebook.github.io/), the way
 | [Deparse]({{< relref "deparse" >}}) | `syntax.Deparse`: parity with R 4.6.2 and the platform divergences |
 | [Evaluator]({{< relref "evaluator" >}}) | M2, package `eval`: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures), judged by the oracle |
 | [Regular expressions]({{< relref "regex" >}}) | v0.6.0 and later: TRE ported to Go, judged by R; what still differs and the open speed defect |
+| [Clean room]({{< relref "clean-room" >}}) | how base R's R code is rewritten and not copied: the similarity gate (winnowing), its thresholds, the oracle guard and the provenance record |
 | [The tre module]({{< relref "tre" >}}) | `go-embedded-r/tre` v0.1.0: what it is, BSD 2-Clause with the TRE notice, `RCompat`, how it is checked |
 | [Eval API]({{< relref "eval-api" >}}) | `NewSession`, `Options` and its default limits (bounded since v0.4.0), `Eval`, `Result` and `Error` |
 | [The oracle harness]({{< relref "oracle" >}}) | `internal/oracle`, `rds`, `cmd/roracle`, the goldens, and how to get the oracle |

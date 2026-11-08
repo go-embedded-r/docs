@@ -9,7 +9,7 @@ description: "The milestones: M0, M1 and M2 are done (v0.7.0), M3 (base R) is in
 **Status: in development.** M0, M1 and M2 are done, released as
 [v0.7.0](https://github.com/go-embedded-r/r/releases/tag/v0.7.0) of
 [go-embedded-r/r](https://github.com/go-embedded-r/r); M3 started in v0.8.0 and the current release is
-[v0.12.1](https://github.com/go-embedded-r/r/releases/tag/v0.12.1) (slices
+[v0.12.2](https://github.com/go-embedded-r/r/releases/tag/v0.12.2) (slices
 1 to 3 were v0.3.0 to v0.5.0, whose regex v0.6.0 replaced with a port of TRE; slice 2 was v0.3.0; v0.4.0 makes the `Eval`
 limits bounded by default, see [Eval API]({{< relref "eval-api" >}}); the parser was
 [v0.1.0](https://github.com/go-embedded-r/r/releases/tag/v0.1.0), deparse

@@ -27,3 +27,5 @@ of R are GPL-2-or-later, so:
   the counterpart. See
   [CONTRIBUTING.md](https://github.com/go-embedded-r/r/blob/main/CONTRIBUTING.md)
   and [NOTICE](https://github.com/go-embedded-r/r/blob/main/NOTICE).
+- **A similarity gate checks the rewritten base library** (since v0.12.2): see
+  [Clean room]({{< relref "clean-room" >}}). It is a floor, not proof.
