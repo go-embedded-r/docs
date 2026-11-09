@@ -4,11 +4,11 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable R interpreter, in development: v0.12.3 completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and M2 (evaluator); M3 (base R) is in progress, 33.9 % of base's exports agreeing with R; M4 to M8 are planned."
+description: "A pure-Go, embeddable R interpreter, in development: v0.13.1 completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and M2 (evaluator); M3 (base R) is in progress, 37.7 % of base's exports agreeing with R; M4 to M8 are planned."
 ---
 
 **go-embedded-r is in development.
-[v0.12.3](https://github.com/go-embedded-r/r/releases/tag/v0.12.3) (2026-11-08)
+[v0.13.1](https://github.com/go-embedded-r/r/releases/tag/v0.13.1) (2026-11-09)
 of [go-embedded-r/r](https://github.com/go-embedded-r/r) completes milestone M0
 (the oracle harness, against the pinned GNU R 4.6.2), milestone M1 (the
 parser and `deparse`, package `syntax`), which agrees with R's tree, tokens,
@@ -17,13 +17,13 @@ milestone M2 (slices 1 to 4).** The evaluator (package `eval`) has 175 of R's
 210 primitives and 110 base closures, with replacement, subsetting, attributes,
 S3 dispatch, conditions, `print`, environments as values, the apply family,
 string functions, regular expressions, the math group, factors and matching;
-2 028 of 2 028 goldens match R 4.6.2 (9 of them are recorded for macOS only and compared only there). The other 35 primitives (complex, raw, S4,
+2 356 goldens match R 4.6.2 (9 of them are recorded for macOS only and compared only there). The evaluator also has connections and files, with a private in-memory file system by default: see [Files and connections]({{< relref "files-and-connections" >}}). The other 35 primitives (complex, raw, S4,
 formula and expression types, foreign calls, `.Internal`) are refused with an
 error that says why. Its regular expressions run on
 [go-embedded-r/tre](https://github.com/go-embedded-r/tre), a port of TRE: see
 [Regular expressions]({{< relref "regex" >}}). **M3 (base R, rewritten clean
-room) has started**: 33.9 % of base's 1 362 exports agree with R 4.6.2 (26.4 %
-at v0.11.0, 24.4 % at v0.10.0, 23.3 % at v0.9.0, 22.2 % at v0.8.0, 19.8 % at v0.7.0, 14.4 % at v0.6.0), see [M3 plan / base coverage]({{< relref "m3-plan" >}}). Stats,
+room) has started**: 37.7 % of base's 1 362 exports agree with R 4.6.2 (33.9 % at
+v0.12.0, 26.4 % at v0.11.0, 24.4 % at v0.10.0, 23.3 % at v0.9.0, 22.2 % at v0.8.0, 19.8 % at v0.7.0, 14.4 % at v0.6.0), see [M3 plan / base coverage]({{< relref "m3-plan" >}}). Stats,
 graphics, the notebook bridge, the WebAssembly playground and CRAN ports
 (M4 to M8) are planned and not started. The interpreter is therefore not
 finished.
@@ -51,11 +51,12 @@ The `r` cells of [go-notebook](https://go-notebook.github.io/), the way
 | Page | What it holds |
 | --- | --- |
 | [Plan]({{< relref "plan" >}}) | the milestones: M0 and M1 done, M2 done, M3 in progress, M4 to M8 planned |
-| [M3 plan / base coverage]({{< relref "m3-plan" >}}) | the plan for base R, the coverage metric (33.9 % at v0.12.0) and how it is measured, collation |
+| [M3 plan / base coverage]({{< relref "m3-plan" >}}) | the plan for base R, the coverage metric (37.7 % at v0.13.0) and how it is measured, collation |
 | [The parser]({{< relref "parser" >}}) | package `syntax`: the API, the tree, the errors, the bounds, and the parity table with R 4.6.2 |
 | [Deparse]({{< relref "deparse" >}}) | `syntax.Deparse`: parity with R 4.6.2 and the platform divergences |
 | [Evaluator]({{< relref "evaluator" >}}) | M2, package `eval`: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures), judged by the oracle |
 | [Regular expressions]({{< relref "regex" >}}) | v0.6.0 and later: TRE ported to Go, judged by R; what still differs and the open speed defect |
+| [Files and connections]({{< relref "files-and-connections" >}}) | slice 10: connections, files, `readRDS`/`saveRDS`, `source`; the private file system, `FileRoot` confinement, the environment, the bounds |
 | [Clean room]({{< relref "clean-room" >}}) | how base R's R code is rewritten and not copied: the similarity gate (winnowing), its thresholds, the oracle guard and the provenance record |
 | [The tre module]({{< relref "tre" >}}) | `go-embedded-r/tre` v0.1.0: what it is, BSD 2-Clause with the TRE notice, `RCompat`, how it is checked |
 | [Eval API]({{< relref "eval-api" >}}) | `NewSession`, `Options` and its default limits (bounded since v0.4.0), `Eval`, `Result` and `Error` |

@@ -11,7 +11,7 @@ fork of the [Hextra](https://github.com/imfing/hextra) theme (pinned to v0.16.0)
 built the same way as the [go-embedded-julia documentation](https://github.com/go-embedded-julia/docs).
 The organization is **in development**: milestones M0 (the oracle harness) and
 M1 (the parser and deparse) are done, and M2 (the
-evaluator) is done, in go-embedded-r/r v0.12.3; M3 (base R) is in progress and M4 to M8 are planned. The site
+evaluator) is done, in go-embedded-r/r v0.13.1; M3 (base R) is in progress and M4 to M8 are planned. The site
 gives the plan, the parser and deparse with their parity tables against
 R 4.6.2, the evaluator's design and slices, the Eval API, the
 oracle harness, and the licence rule. Every statement comes from the README and
@@ -31,14 +31,14 @@ tagged:
 
 `https://go-embedded-r.github.io/docs/` redirects to `latest/`. Each push to
 `main` replaces the directory of the version it describes, and nothing else.
-The interpreter is tagged v0.12.3, so the pages are published under `0.12/`,
+The interpreter is tagged v0.13.1, so the pages are published under `0.13/`,
 which `latest/` follows; the older versions stay as published.
 
 ## Layout
 
 | Path | What |
 | --- | --- |
-| `content/en/` | the pages; `_index.md` is the home, then the plan, the parser, deparse, the evaluator, the Eval API, regular expressions, the tre module, the M3 plan and base coverage, the clean-room process, the oracle harness and the licences, `weight` orders the sidebar |
+| `content/en/` | the pages; `_index.md` is the home, then the plan, the parser, deparse, the evaluator, the Eval API, regular expressions, the tre module, the M3 plan and base coverage, the clean-room process, files and connections, the oracle harness and the licences, `weight` orders the sidebar |
 | `i18n/en.yaml` | the site's strings, beside the theme's |
 | `hugo.yaml` | `baseURL`, the packages described, the navbar (version, theme, search, GitHub) |
 | `layouts/_partials/custom/version-select.html` | the version selector (reads `versions.json`) |

@@ -4,10 +4,10 @@ weight: 28
 description: "Package eval: NewSession, Options and its default limits, Eval, EvalContext, EvalIn, Get and Set, Result and Error."
 ---
 
-<!-- From the README of go-embedded-r/r on main (v0.12.3) and the doc comments of eval/session.go. Change the repository first, then here. -->
+<!-- From the README of go-embedded-r/r on main (v0.13.1) and the doc comments of eval/session.go. Change the repository first, then here. -->
 
 The package is `github.com/go-embedded-r/r/eval`, in
-[v0.12.3](https://github.com/go-embedded-r/r/releases/tag/v0.12.3) (bounded by
+[v0.13.1](https://github.com/go-embedded-r/r/releases/tag/v0.13.1) (bounded by
 default since [v0.4.0](https://github.com/go-embedded-r/r/releases/tag/v0.4.0)).
 
 ```go
@@ -55,6 +55,12 @@ set. A zero field now selects its default:
 | `MaxDepth` | nesting of evaluations (R's `expressions`); beyond it, `evaluation nested too deeply` | **5000** |
 | `MaxVector` | length of any vector the runtime allocates | **2^28** elements |
 | `Parse` | a `syntax.Limits` bounding the source text of an `Eval` | see `syntax.Limits` |
+| `MaxFileBytes` | (v0.13.0) the in-memory file system, any one file read or written under `FileRoot`, and what a text connection holds | **256 MiB** (`DefaultMaxFileBytes`); `eval.Unbounded` removes it |
+| `FileRoot` | (v0.13.0) a host directory as the session's file-system root, confined with `os.OpenRoot` | **empty: a private in-memory tree** the host never sees; `Session.Close` releases a root |
+| `Env` | (v0.13.0) the environment variables the session sees through `Sys.getenv` | **nil: empty**; the host's environment is never read |
+
+The file-system and environment options are described, with the security
+properties they give an embedder, on [Files and connections]({{< relref "files-and-connections" >}}).
 
 The first three defaults were measured, not guessed (`RGO_MEASURE=1 go test -run
 TestMeasureLimits -v ./eval`): the 1 035 goldens of v0.5.0 need at most 8 879 steps, 0.8 MB
