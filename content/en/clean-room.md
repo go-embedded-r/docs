@@ -1,10 +1,10 @@
 ---
 title: "Clean room"
 weight: 35
-description: "v0.12.2: how base R's R code is rewritten and not copied, the similarity gate (cmd/cleanroom, winnowing), its thresholds and audit, the oracle guard and the provenance record. The gate is a floor, not proof."
+description: "v0.12.3: how base R's R code is rewritten and not copied, the similarity gate (cmd/cleanroom, winnowing), its thresholds and audit, the oracle guard and the provenance record. The gate is a floor, not proof."
 ---
 
-<!-- From the README of go-embedded-r/r on main (v0.12.2), section "Clean-room process: the similarity gate", its NOTICE (rules 5 to 7) and the body of pull request 30. Change those first, then here. -->
+<!-- From the README of go-embedded-r/r on main (v0.12.3), section "Clean-room process: the similarity gate", its NOTICE (rules 5 to 7) and the bodies of pull requests 30 and 32. Change those first, then here. -->
 
 go-embedded-r/r is BSD-3-Clause and the R code of base R is GPL-2-or-later, so
 the rule is: **base R's R code is rewritten, never copied.** A rule that depends
@@ -70,9 +70,23 @@ to files of at least 200 tokens and smaller files are gated on an absolute count
 
 ## The audit
 
-At v0.12.2 every file of `eval/baselib` is under the gate. The file that
-prompted it, `datetime.R`, scored before its rewrite exact **0.23**, normalised
-**0.47**, longest exact run **88** tokens; after, **0.17**, **0.39**, **38**.
+At v0.12.3 every file of `eval/baselib` is under the gate. "Best R file" is the
+one with the highest normalised containment; against R's largest files that is
+generic structure, which is why the normalised column alone is not the gate.
+"Before" is the first draft, scored with formal argument lists still
+fingerprinted; "after" is the file in the repository, scored as the gate now does.
+
+| File | Best R file | Exact | Normalised | Longest exact run (before) | Rewritten |
+| --- | --- | --- | --- | --- | --- |
+| `datetime.R` | `base/R/datetime.R` | 0.11 (before 0.23) | 0.34 (0.47) | 36 (88) | yes, from the Rd pages and the oracle, without the old file |
+| `vectors.R` | `tools/R/QC.R` | 0.00 (0.00) | 0.40 (0.41) | 22 (74, `ifelse`) | `ifelse`, `append`, `isTRUE`, `isFALSE`, `NROW`, `NCOL` |
+| `conditions.R` | `methods/R/RMethodUtils.R` | 0.00 (0.27) | 0.43 (0.43) | 6 (13) | yes, blind, by a second agent |
+| `env.R` | `tools/R/QC.R` | 0.00 (0.01) | 0.52 (0.55) | 22 (26) | no |
+| `support.R` | `tools/R/QC.R` | 0.01 (0.01) | 0.41 (0.47) | 30 (35) | no |
+| `strings.R` | `base/R/namespace.R` | 0.00 (0.03) | 0.23 (0.28) | 26 (31) | no |
+
+The longest runs left (22 to 36 tokens) are a documented one-liner or an error
+message the oracle fixes.
 
 Three files were rewritten clean room in v0.12.2 (pull request 30): `datetime.R`
 (written without the old file or R's R sources, from the Rd pages and oracle
@@ -89,15 +103,18 @@ the error `oracle: printing base closures is disallowed by the clean-room rule`,
 to print, deparse, `dput`, `body`, `as.list`, `format`, serialize or return any
 closure of base, stats, utils, methods and the other packages of R, however it is
 reached (auto-print, `:::`, `getAnywhere`, inside a list or an attribute, or a
-copy made in the global environment, which is recognised by its body).
+copy made in the global environment, recognised with `identical()` against the
+bodies and formals of every function of those packages, at any size, including
+copies made with `body<-`, `attr<-` or `as.function`).
 `.Internal` is refused in requests. Closures of our own print, and goldens that
 compare function printing use closures defined in the snippet.
 
-**Known gap**
-([issue 31](https://github.com/go-embedded-r/r/issues/31), open): a base closure
-whose body is under 100 serialized bytes can be copied out of the namespace and
-then printed. Someone with an installed R can also still read its sources, which
-is why the rule is procedural too.
+Until v0.12.3 a base closure whose body was under 100 serialized bytes could be
+copied out of the namespace and printed
+([issue 31](https://github.com/go-embedded-r/r/issues/31), closed by
+[pull request 32](https://github.com/go-embedded-r/r/pull/32)); the size floor is
+gone. Someone with an installed R can still read its sources, which is why the
+rule is procedural too.
 
 ## Provenance in every pull request
 

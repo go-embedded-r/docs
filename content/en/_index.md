@@ -4,11 +4,11 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable R interpreter, in development: v0.12.2 completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and M2 (evaluator); M3 (base R) is in progress, 33.9 % of base's exports agreeing with R; M4 to M8 are planned."
+description: "A pure-Go, embeddable R interpreter, in development: v0.12.3 completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and M2 (evaluator); M3 (base R) is in progress, 33.9 % of base's exports agreeing with R; M4 to M8 are planned."
 ---
 
 **go-embedded-r is in development.
-[v0.12.2](https://github.com/go-embedded-r/r/releases/tag/v0.12.2) (2026-11-08)
+[v0.12.3](https://github.com/go-embedded-r/r/releases/tag/v0.12.3) (2026-11-08)
 of [go-embedded-r/r](https://github.com/go-embedded-r/r) completes milestone M0
 (the oracle harness, against the pinned GNU R 4.6.2), milestone M1 (the
 parser and `deparse`, package `syntax`), which agrees with R's tree, tokens,
