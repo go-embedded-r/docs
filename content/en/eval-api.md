@@ -4,10 +4,10 @@ weight: 28
 description: "Package eval: NewSession, Options and its default limits, Eval, EvalContext, EvalIn, Get and Set, Result and Error."
 ---
 
-<!-- From the README of go-embedded-r/r on main (v0.13.1) and the doc comments of eval/session.go. Change the repository first, then here. -->
+<!-- From the README of go-embedded-r/r on main (v0.14.1) and the doc comments of eval/session.go. Change the repository first, then here. -->
 
 The package is `github.com/go-embedded-r/r/eval`, in
-[v0.13.1](https://github.com/go-embedded-r/r/releases/tag/v0.13.1) (bounded by
+[v0.14.1](https://github.com/go-embedded-r/r/releases/tag/v0.14.1) (bounded by
 default since [v0.4.0](https://github.com/go-embedded-r/r/releases/tag/v0.4.0)).
 
 ```go
