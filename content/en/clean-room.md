@@ -95,6 +95,24 @@ and `conditions.R`. Behaviour did not change: 2 028 of 2 028 goldens, and the
 datetime fuzz against the old file gave the same results with the same four
 counted exclusions.
 
+## A failed first draft becomes a Go native
+
+Since v0.14.1: a baselib function whose first draft fails the gate is
+implemented as a Go native from the Rd page and the oracle, never reshaped in R,
+and the failed first-draft score is recorded in the pull request. Reshaping a
+draft until the gate passes would make the gate the target. The cases that
+fixed the rule (pull request 36):
+
+| Function | First draft, blind, from `rle.Rd` / `scale.Rd` and the oracle | Gate | Now |
+| --- | --- | --- | --- |
+| `rle`, `inverse.rle` | longest exact run **51** tokens, normalised **64**, against `base/R/rle.R` (a blind author converged on R's own run) | 40 and 60 | `eval/rle.go` |
+| `scale.default` | exact containment **0.26** against `base/R/scale.R` | 0.20 | `eval/scale.go` (R keeps the generic and a thin method) |
+
+The v0.14.0 drafts of the same functions had been reshaped to pass (the
+"redesigned" rows of the repository's gate table); that is what the rule now
+forbids. The submitted `scale_rle.R` scores 0.00 exact, 0.45 normalised, longest
+run 10 tokens.
+
 ## The oracle guard
 
 Printing a base function in the reference R shows its GPL body, and this happened
