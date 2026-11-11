@@ -76,6 +76,28 @@ separators as R does. `sink` (a stack of 20, `append`, `split`,
 a cell prints reaches a connection and never the `Result`; a sink left open stays
 across cells.
 
+## Binary connections (v0.15.0)
+
+`rawConnection` (modes `r`, `w`, `a`, `rb`, `wb`, `ab`) and `rawConnectionValue`
+read and write a raw vector in memory. `readBin` reads integers (1, 2, 4 and 8
+bytes, signed or not), doubles (4 and 8), logicals, complex numbers, raw vectors
+and character strings, with `endian`; `writeBin` is its inverse; `readChar` and
+`writeChar` work on characters, `seek` and `isSeekable` on positions. All of them
+take a raw vector, a file name, a file connection or a raw connection, and obey
+the same `MaxFileBytes` bound as the other connections.
+
+Every allocation is checked before it is made: `readBin(n = 1e12)`, `raw(1e12)`,
+`rawToBits(raw(2^26))` and `writeChar(nchars = 1e12)` are refused, and `readBin`
+allocates by the bytes there are, not by `n`. A decoder fuzz (`FuzzReadBin`, 900 000
+executions) found no crash.
+
+Divergences: R answers `readBin(n = 1e12)` with `vector memory limit of 2.0 Gb
+reached`, ours with `cannot allocate vector of length`; a `rawConnection` opened
+`r+` appends writes instead of overwriting at the read position; strings made by
+`rawToChar`, `readBin` and `readChar` carry no encoding mark in R (`Encoding()`
+says `unknown`), ours says `UTF-8` for non-ASCII text. `gzfile` and `memCompress`
+are not in this release (no zlib is written here).
+
 ## Files
 
 `file.exists`, `dir.exists`, `file.create`, `file.remove`, `file.rename`,

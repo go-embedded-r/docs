@@ -1,10 +1,10 @@
 ---
 title: "M3 plan / base coverage"
 weight: 26
-description: "M3 (base R, clean room) has started: the plan, the coverage metric (40.8 % of base's 1 362 exports agree with R 4.6.2 at v0.14.1), and how it is measured."
+description: "M3 (base R, clean room) has started: the plan, the coverage metric (43.4 % of base's 1 362 exports agree with R 4.6.2 at v0.15.0), and how it is measured."
 ---
 
-<!-- From docs/m3-plan.md and the README of go-embedded-r/r on main (v0.14.1). Change those first, then here. -->
+<!-- From docs/m3-plan.md and the README of go-embedded-r/r on main (v0.15.0). Change those first, then here. -->
 
 **M3 has started.** M2 gave an evaluator with 175 of R's 210 primitives; M3 is the
 rest of what `library(base)` exports (1 152 closures). The first slice of M3 is
@@ -14,7 +14,7 @@ starts the base library, is [v0.8.0](https://github.com/go-embedded-r/r/releases
 slice 6 (strings and format) is v0.9.0 and v0.9.1, slice 7 (conditions and the
 call stack) is v0.10.0, slice 8 (environments and namespaces) is v0.11.0, slice 9 (dates and times) is
 v0.12.0 and v0.12.1, slice 10 (connections and files) is v0.13.0 and v0.13.1, slice 11
-(matrices, arrays and grouping) is v0.14.0 and v0.14.1, the current release. The plan is
+(matrices, arrays and grouping) is v0.14.0 and v0.14.1, and slice 12 (complex and raw types, expression vectors, binary connections) is v0.15.0, the current release. The plan is
 [`docs/m3-plan.md`](https://github.com/go-embedded-r/r/blob/main/docs/m3-plan.md).
 
 ## The metric
@@ -31,6 +31,7 @@ v0.12.0 and v0.12.1, slice 10 (connections and files) is v0.13.0 and v0.13.1, sl
 | v0.13.0 (slice 10, connections and files) | 513 of 1 362 | **37.7 %** |
 | v0.14.0 (slice 11, matrices, arrays and grouping) | 556 of 1 362 | **40.8 %** |
 | v0.14.1 (rle and scale as Go natives) | 556 of 1 362 | **40.8 %** |
+| v0.15.0 (slice 12, complex and raw types, expression vectors, binary connections) | 591 of 1 362 | **43.4 %** |
 
 ## How it is measured
 
@@ -90,7 +91,8 @@ provenance record: see [Clean room]({{< relref "clean-room" >}}).
 | 9 (v0.12.0, v0.12.1, done: 33.9 %) | dates and times: `Date`, `POSIXct`, `POSIXlt`, `difftime`, `strptime`, `format`, time zones from Go's embedded IANA database; 2 022 of 2 022 goldens at v0.12.0 |
 | 10 (v0.13.0, v0.13.1, done: 37.7 %) | connections and files: `file`, `textConnection`, `readLines`, `writeLines`, `sink`, `capture.output`, the file-system functions, `readRDS`/`saveRDS`, `source`, `Sys.getenv`; a private in-memory file system by default, `FileRoot` confinement; 2 356 goldens, io fuzz 16 294 of 16 294 compared. See [Files and connections]({{< relref "files-and-connections" >}}) |
 | 11 (v0.14.0, v0.14.1, done: 40.8 %) | matrices, arrays and grouping: `apply`, `sweep`, `scale`, `aperm`, `prop.table`, `margin.table`, `rownames`/`colnames`, `lower.tri`, `diag<-`, `split`, `unsplit`, `tapply`, `rle`, `sequence`, `replace`, `replicate`, `bquote`, `is.vector`, and the printing they need (named dimnames, one-dimensional arrays, list matrices); 556 of 1 362 base exports agree (513 at v0.13.0); 2 737 goldens at v0.14.1 (351 new in v0.14.0). v0.14.1 turns `rle`, `inverse.rle` and the arithmetic of `scale.default` into Go natives after their blind R drafts failed the gate, see [Clean room]({{< relref "clean-room" >}}). **Deferred**: `table` and everything with data frames, `kronecker`, `Vectorize`, `alist`, `interaction`, `cut`, `strwrap`, `pretty`, `print.rle` |
-| 12 | linear algebra and numerics that base exports (depends on go-numerics) |
+| 12 (v0.15.0, done: 43.4 %) | the complex and raw types (`complex`, `Re`, `Im`, `Mod`, `Arg`, `Conj`, `raw`, `as.raw`, `bitw*`, `packBits`, `rawToChar`), expression vectors (`expression`, `parse(text =)`, `str2lang`, `eval`), and binary connections (`rawConnection`, `readBin`, `writeBin`, `readChar`, `writeChar`, `seek`); all Go natives, nothing written in R; 307 new goldens, 3 048 in all; 183 of 210 primitives, 27 refused. 591 of 1 362 base exports agree (556 at v0.14.1). **Not in this release**: `polyroot`, `as.hexmode`, `dput`, `serialize`, `gzfile`, `memCompress` (no zlib here, see go-embedded-ruby/ruby#918) |
+| 13 | linear algebra and numerics that base exports (waits for the shared linear-algebra extraction, go-embedded-ruby/ruby#918, and go-numerics) |
 | 12 | the complex and raw types, expression vectors, formulas, S4 |
 
 A slice is tagged when its goldens, fuzz, `FuzzEval` and bomb tests are green and
