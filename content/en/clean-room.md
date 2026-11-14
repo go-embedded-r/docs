@@ -108,6 +108,21 @@ fixed the rule (pull request 36):
 | `rle`, `inverse.rle` | longest exact run **51** tokens, normalised **64**, against `base/R/rle.R` (a blind author converged on R's own run) | 40 and 60 | `eval/rle.go` |
 | `scale.default` | exact containment **0.26** against `base/R/scale.R` | 0.20 | `eval/scale.go` (R keeps the generic and a thin method) |
 
+Five more first drafts failed in v0.16.0 (slice 14, data frames) and became Go
+natives, scored as exact or normalised token runs against R's own files (gate
+40 exact, 60 normalised):
+
+| First draft | Score |
+| --- | --- |
+| `[<-.factor` and `[[<-.factor` | 85 exact (`factor.R`) |
+| `addNA` | 54 exact (`factor.R`) |
+| `[<-.data.frame` | 67 exact (`dataframe.R`) |
+| `transform.data.frame` | 86 normalised (`frametools.R`) |
+| `subset.data.frame` | 86 normalised (`frametools.R`) |
+
+The three baselib files that pass (`dataframe.R`, `dfmethods.R`, `table.R`) score
+at most 0.10 exact and 0.43 normalised containment, longest exact run 35 tokens.
+
 The v0.14.0 drafts of the same functions had been reshaped to pass (the
 "redesigned" rows of the repository's gate table); that is what the rule now
 forbids. The submitted `scale_rle.R` scores 0.00 exact, 0.45 normalised, longest
