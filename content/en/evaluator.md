@@ -1,7 +1,7 @@
 ---
 title: "Evaluator"
 weight: 27
-description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 3 289 goldens at v0.16.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
+description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 3 733 goldens at v0.17.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
 ---
 
 <!-- From the README of go-embedded-r/r on main (v0.12.1) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
@@ -86,6 +86,29 @@ Divergences: `summary` of a data frame or table, `Ops`/`Math`/`Summary` of data
 frames, `aggregate`, `by`, `stack`, `within`, `ftable`, `xtabs`, and matrix and
 list columns are not in this release; `df[i, "missing"]` errors where R answers
 `NULL`; a long error call breaks its lines differently from R's.
+
+## `summary`, `all.equal` and group methods (v0.17.0)
+
+v0.17.0 (slice 15, [pull request 41](https://github.com/go-embedded-r/r/pull/41))
+takes the deferred base functions that need no shared engine, chosen by
+`rparity basecov` (its `--list-pure` list of closures that call no missing
+`.Internal`): `summary` (default, factor, matrix, data frame) and its printing,
+`format.pval`, `all.equal` (all methods), `isSymmetric`, `formals`, `body<-`,
+`as.function`, `sys.parent`, the `Ops`, `Math` and `Summary` group methods of
+factors and data frames, `within`, `hexmode` and `octmode`, `AsIs`, the date and
+time `diff`, `range`, `split`, `length<-` and `xtfrm` methods, the condition
+methods, `.Deprecated` and `.Defunct`. It adds 444 goldens, **3 733 in all**;
+basecov goes from 659 to 782 of 1 362 (48.4 % to 57.4 %).
+
+Behaviour changes: `attributes()` lists attributes in the order they were set, as
+R 4.6 does; `zapsmall` rounds digits like R; `as.difftime` stores doubles.
+
+Divergences: `formals` returns a list, not a pairlist; `mean(x, trim =)` of an
+inexact sum can differ in the last bit; `Vectorize` is not tested (the oracle
+cannot return it). Still deferred: `strwrap`, `pretty`, `kronecker`,
+`dput`/`dget`/`dump`, `print.rle`, `seq.POSIXt`, `round`, `trunc` and `cut` of
+dates, `by`, `file.info`, `scan`, `numeric_version`, `summary` of dates and
+tables.
 
 History: slice 2 was released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0)
@@ -278,7 +301,7 @@ warnings are R's own: `Error in f(1) : object 'y' not found`.
 
 | Check | Result |
 | --- | --- |
-| goldens: 3 289 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **3 289 / 3 289** (v0.16.0; 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
+| goldens: 3 733 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **3 733 / 3 733** (v0.17.0; 3 289 at v0.16.0, 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
 | differential fuzz, environments (`--mode env`; seeds 1, 2, 3, 5 000 programs each): `get`, `exists`, `get0`, `mget` with modes, `inherits` and `ifnotfound`; `assign`, `$<-`, `[[<-`, `local`, `evalq` into locked bindings and environments; `rm`; the lock functions; active bindings; `delayedAssign`; `as.list`, `eapply`, `with`, `within`; the namespace functions; `::`, `:::`; `topenv`, `environmentName`. **Exclusions, generated on purpose and counted (1 858 of the 15 000 programs, not in the figure)**: 473 print an environment's address (compared with the address replaced, 0 differ), 458 print a builtin (our `print` shows no formals; compared as `.Primitive("name")`, 0 differ), 485 use a package R installs besides base (compared exactly: 363 differ, the divergence of slice 8), 442 list a hashed environment unsorted (compared exactly: 210 differ, R's order is undefined) | **13 142 / 13 142** compared, plus the exclusions above |
 | differential fuzz, connections and files (`--mode io`; seeds 1, 2, 3, 6 000 programs each, 11 families). **One exclusion, generated on purpose and counted (1 706 of the 18 000 programs, not in the figure)**: non-ASCII text through a connection (compared exactly except for the mark, 0 differ) | **16 294 / 16 294** compared |
 | differential fuzz, dates and times (`--mode datetime`; seeds 1, 2, 3, 6 000 programs each): formatting with 40 conversions (`%s` included), parsing, `POSIXlt` fields, round trips through text, `difftime` in every unit, arithmetic and comparison on `Date`/`POSIXct`/`difftime`, `seq` by day, week, month, quarter, year, `c`, `rep`, `rev`, `sort`, `unique`, time zone conversion in 8 zones; years 1971 to 2037, never 01:00 to 03:59 local. **Exclusions, generated on purpose and counted (1 848 of the 18 000 programs, not in the figure)**: 462 in years before 1902 (R warns once per session, so the warning is not compared; the rest is, 0 differ), 463 in years after 2037 in zones with daylight saving (compared exactly, 0 differ), 445 `tzone` attributes of zones with unusual daylight abbreviations (compared exactly, 56 differ), 478 local times that a daylight-saving change skips or repeats (compared exactly, 64 differ) | **16 152 / 16 152** compared, plus the exclusions above |
@@ -330,7 +353,7 @@ Of slice 9 (v0.12.0 and v0.12.1):
   R does not.
 - `Date` and `POSIXct` have no `round`, `trunc`, `cut`, `summary`, `seq.POSIXt`,
   `Sys.setenv`, `Sys.timezone`, `OlsonNames`, and date columns in data
-  frames were not checked in v0.16.0.
+  frames were not checked in v0.17.0.
 
 Of slice 8 (v0.11.0):
 

@@ -123,6 +123,33 @@ natives, scored as exact or normalised token runs against R's own files (gate
 The three baselib files that pass (`dataframe.R`, `dfmethods.R`, `table.R`) score
 at most 0.10 exact and 0.43 normalised containment, longest exact run 35 tokens.
 
+In v0.17.0 (slice 15) first drafts that failed the gate again became Go natives
+(exact run / normalised run / file containment against R's own files; limits
+40 / 60 / 0.20):
+
+| First draft | Score |
+| --- | --- |
+| `as.hexmode`, `as.octmode` | 77 exact (`octhex.R`) |
+| `diff.POSIXt` | 30 exact, containment 0.21 (`datetime.R`) |
+| `labels.default` | 62 exact (`labels.R`) |
+| `mostattributes<-` | 66 normalised (`attr.R`) |
+| `as.array.default` | 52 exact (`as.R`) |
+| `format.pval` | 88 normalised (`format.R`) |
+| `as.character.condition`, `.error` | 43 exact, 94 normalised (`conditions.R`) |
+| `print.condition` and the two condition accessors | 71 normalised (`conditions.R`) |
+| `within.data.frame` | 43 exact (`eval.R`) |
+| `all.equal` default and `attr.all.equal` | 105 normalised |
+| `all.equal.list`, `.factor` | 41 exact |
+| `all.equal.character`, `.raw` | 79 normalised |
+| `all.equal.environment` | 38 exact |
+| `all.equal.language`, `.function` | 33 exact |
+| `all.equal.numeric` | file containment 0.22 against 0.20 |
+
+The three R files that pass score: `misc15.R` 0.01 exact and 0.33 normalised
+containment, longest exact run 36; `summary15.R` 0.09 and 0.40, longest 23 exact
+and 49 normalised; `methods15.R` 0.00 and 0.44, longest 38 exact and 51
+normalised.
+
 The v0.14.0 drafts of the same functions had been reshaped to pass (the
 "redesigned" rows of the repository's gate table); that is what the rule now
 forbids. The submitted `scale_rle.R` scores 0.00 exact, 0.45 normalised, longest
