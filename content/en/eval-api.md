@@ -4,10 +4,10 @@ weight: 28
 description: "Package eval: NewSession, Options and its default limits, Eval, EvalContext, EvalIn, Get and Set, Result and Error."
 ---
 
-<!-- From the README of go-embedded-r/r on main (v0.17.0) and the doc comments of eval/session.go. Change the repository first, then here. -->
+<!-- From the README of go-embedded-r/r on main (v0.17.1) and the doc comments of eval/session.go. Change the repository first, then here. -->
 
 The package is `github.com/go-embedded-r/r/eval`, in
-[v0.17.0](https://github.com/go-embedded-r/r/releases/tag/v0.17.0) (bounded by
+[v0.17.1](https://github.com/go-embedded-r/r/releases/tag/v0.17.1) (bounded by
 default since [v0.4.0](https://github.com/go-embedded-r/r/releases/tag/v0.4.0)).
 
 ```go
@@ -52,12 +52,22 @@ set. A zero field now selects its default:
 | `MaxSteps` | calls and loop iterations evaluated by one `Eval` | **30 000 000** |
 | `MaxAlloc` | bytes of vector storage allocated in total by one `Eval`, copies included | **16 GiB** |
 | `Timeout` | time one `Eval` may take; a context given to `EvalContext` bounds it too | **10 s** |
-| `MaxDepth` | nesting of evaluations (R's `expressions`); beyond it, `evaluation nested too deeply` | **5000** |
+| `MaxDepth` | nesting of evaluations (R's `expressions`); beyond it, `evaluation nested too deeply`. Since v0.17.1 it also bounds the recursion of every native that walks the structure of a value (`identical`, printing, `format`, `deparse`, `substitute`, `unlist`, `anyNA`, `cat`, recursive `[[<-`, `saveRDS` and `readRDS`, language objects), on one shared counter per session | **5000** (`DefaultMaxDepth`); **300** under `GOOS=js` and `GOOS=wasip1` |
 | `MaxVector` | length of any vector the runtime allocates | **2^28** elements |
 | `Parse` | a `syntax.Limits` bounding the source text of an `Eval` | see `syntax.Limits` |
 | `MaxFileBytes` | (v0.13.0) the in-memory file system, any one file read or written under `FileRoot`, and what a text connection holds | **256 MiB** (`DefaultMaxFileBytes`); `eval.Unbounded` removes it |
 | `FileRoot` | (v0.13.0) a host directory as the session's file-system root, confined with `os.OpenRoot` | **empty: a private in-memory tree** the host never sees; `Session.Close` releases a root |
 | `Env` | (v0.13.0) the environment variables the session sees through `Sys.getenv` | **nil: empty**; the host's environment is never read |
+
+Past `MaxDepth`, R's own errors are raised and the session stays usable:
+`CStackOverflowError` (`C stack usage  N is too close to the limit`) for deep
+data and `expressionStackOverflowError` (`evaluation nested too deeply: infinite
+recursion / options(expressions=)?`) for deep calls; both inherit
+`stackOverflowError`. Under `GOOS=js` and `GOOS=wasip1` the default is 300,
+because a WebAssembly engine's own stack, which Go cannot grow, overflows with a
+JS `RangeError` that kills the instance (measured with node and V8's default
+984 KB stack: 2 548 nested R calls, 10 419 levels of data in `identical`); a
+host that knows its stack is larger sets `Options.MaxDepth`.
 
 The file-system and environment options are described, with the security
 properties they give an embedder, on [Files and connections]({{< relref "files-and-connections" >}}).
