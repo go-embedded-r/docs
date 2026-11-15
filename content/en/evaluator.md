@@ -184,6 +184,45 @@ deferred: `scan`, `read.table`, `read.csv`, `read.delim`, `xtabs`, `ftable`,
 the stats package, `serialize` and `unserialize`, the distributions and the
 random number generators (shared engines).
 
+## Table readers and writers, `xtabs` and statistics (v0.20.0)
+
+v0.20.0 (slice 18, [pull request 49](https://github.com/go-embedded-r/r/pull/49))
+adds the readers and writers of tables, `xtabs`, and the descriptive statistics.
+Readers (Go natives, on the session's file system, `Options.FileRoot` and text
+connections): `scan`, `read.table`, `read.csv`, `read.csv2`, `read.delim`,
+`read.delim2`, `count.fields`, `type.convert`. Writers: `write.table`,
+`write.csv`, `write.csv2`. `xtabs` (formula and data, a response or a `cbind` of
+responses, `subset`, `na.action`, `addNA`, `exclude`, `drop.unused.levels`) and
+`print.xtabs` are R; `summary.table` and `print.summary.table` are Go natives.
+Statistics: `median`, `var`, `sd`, `cov`, `cor` (Pearson, Spearman, Kendall; the
+five `use` modes), `quantile` (the nine types), `fivenum`, `IQR`, `mad`,
+`weighted.mean`. They are written here because go-numerics has no such kernel;
+each states an error bound asserted against math/big: `var` within 4u relative,
+`cov` within 4u of the sum of the absolute products, `cor` within 8u absolute,
+quantile types 4 to 9 within 4u of the larger neighbour, `median` and `fivenum`
+within 2u, `weighted.mean` within 4u (u = 2^-53). R's own results differ from the
+exact ones in the last bits (a quantile of values that cancel differs by up to 64
+units in the last place); the fuzz compares them within 128 ulp and counts them.
+
+It adds 537 goldens; basecov goes from 905 to 908 of 1 362 (66.7 %, most of the
+new functions being utils or stats, not base); 184 of the 210 primitives. The
+slice 18 fuzz mode (seeds 41, 42, 43, 44; 1 600 programs each) ends with 0
+differences. Clean room: the first draft `xtabs18.R` failed the gate, and its
+`summary.table` and `print.summary.table` became Go natives, see
+[Clean room]({{< relref "clean-room" >}}). Bounds: a line of 240 000 fields, a
+header that wide, a quote that never closes, 2^31 rows, more rows than
+`MaxVector` and a table too large for `MaxFileBytes` are refused.
+
+Divergences: `summary.table` has no chi-squared test (`pchisq` is missing), so a
+table of several factors prints no test; `ftable` is deferred; `ecdf` is not
+written; the numbers are parsed correctly rounded, R's own parser can differ in
+the last bit beyond 15 digits (`numerals`); `type.convert` takes more than 15
+significant digits as a loss; `quantile` of dates is supported for types 1 to 3
+only, of unordered factors it refuses; `mad(x, low = TRUE)` of an empty vector
+answers `NA` where R fails. The timing against R is not measured (the load was
+50): open item go-embedded-r/r#48. Still deferred: `ftable`, `ecdf`, `read.fwf`,
+`pchisq` and the test in `summary.table`, `model.matrix` (slice 13).
+
 History: slice 2 was released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0)
 ([pull request 8](https://github.com/go-embedded-r/r/pull/8)); v0.4.0
