@@ -1,7 +1,7 @@
 ---
 title: "Evaluator"
 weight: 27
-description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 5 265 goldens at v0.19.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
+description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 5 838 goldens at v0.21.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
 ---
 
 <!-- From the README of go-embedded-r/r on main (v0.12.1) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
@@ -196,7 +196,8 @@ responses, `subset`, `na.action`, `addNA`, `exclude`, `drop.unused.levels`) and
 `print.xtabs` are R; `summary.table` and `print.summary.table` are Go natives.
 Statistics: `median`, `var`, `sd`, `cov`, `cor` (Pearson, Spearman, Kendall; the
 five `use` modes), `quantile` (the nine types), `fivenum`, `IQR`, `mad`,
-`weighted.mean`. They are written here because go-numerics has no such kernel;
+`weighted.mean`. They were first written here, because go-numerics has no
+statistics kernel (slice 19 binds go-statistics/stats where it holds the bound);
 each states an error bound asserted against math/big: `var` within 4u relative,
 `cov` within 4u of the sum of the absolute products, `cor` within 8u absolute,
 quantile types 4 to 9 within 4u of the larger neighbour, `median` and `fivenum`
@@ -213,8 +214,7 @@ differences. Clean room: the first draft `xtabs18.R` failed the gate, and its
 header that wide, a quote that never closes, 2^31 rows, more rows than
 `MaxVector` and a table too large for `MaxFileBytes` are refused.
 
-Divergences: `summary.table` has no chi-squared test (`pchisq` is missing), so a
-table of several factors prints no test; `ftable` is deferred; `ecdf` is not
+Divergences: `ftable` is deferred; `ecdf` is not
 written; the numbers are parsed correctly rounded, R's own parser can differ in
 the last bit beyond 15 digits (`numerals`); `type.convert` takes more than 15
 significant digits as a loss; `quantile` of dates is supported for types 1 to 3
@@ -222,6 +222,48 @@ only, of unordered factors it refuses; `mad(x, low = TRUE)` of an empty vector
 answers `NA` where R fails. The timing against R is not measured (the load was
 50): open item go-embedded-r/r#48. Still deferred: `ftable`, `ecdf`, `read.fwf`,
 `pchisq` and the test in `summary.table`, `model.matrix` (slice 13).
+
+## Statistics on go-statistics, `pchisq` and `summary.table` (v0.21.0)
+
+v0.21.0 (slice 19, [pull request 50](https://github.com/go-embedded-r/r/pull/50))
+moves the statistics onto
+[go-statistics/stats](https://github.com/go-statistics/stats) v0.1.1
+(BSD-3-Clause) wherever it holds the bound slice 18 states, and finishes
+`summary.table`. Bound to go-statistics: the ranks (`stats.RankData`), the tau-b
+of `cor(method = "kendall")`, and `pchisq` and `qchisq` (central and non-central,
+`lower.tail`, `log.p`, recycling, `NaNs produced`; `df = 0` is the point mass at
+0). Compared against math/big: `Var` is 6e7 times over our 4u on `1e12 + U(0,1)`;
+`Pearsonr` is 2e4 times over 8u on the same data; `Quantile` types 5 to 9, the
+default 7 among them, are 18 to 24 times over; `Kendalltau` is within 0.25 of 8u;
+`RankData` is exact.
+
+Kept here, as gaps in go-statistics (the upstream issues are
+go-statistics/stats#24 to #27): `var` and the covariance (a compensated kernel,
+4u of the result; there is no covariance function at all), Pearson `cor` (8u
+absolute), `quantile` types 5 to 9 and the R fuzz of types 2 and 3,
+`weighted.mean` (4u of the sum of the absolute products), the signed pair count
+of Kendall (`cov(method = "kendall")`), `fivenum`, `mad` (R's constant, `low`,
+`high`, a centre and `na.rm`), `IQR`, the non-central chi-squared with `df = 0`,
+and `qchisq` with `log.p`. Median and quantile are also slower than ours at 10^6
+doubles (see go-embedded-r/r#48), so they were not bound.
+
+`summary.table` now computes the statistic, `parameter`, `approx.ok` and
+`p.value` of a table of several factors, and `print.summary.table` writes
+`Test for independence of all factors`, the `Chisq`, `df` and `p-value` line and
+the warning about the approximation as R does; `round` rounds a `digits` that is
+not an integer to the nearest one, as R does.
+
+Gates: 36 new goldens, **5 838 in all** (5 802 at v0.20.0), all agreeing with R
+4.6.2; `pchisq` is closer to the exact value than R's (`pchisq(2, 3)`: exact
+0.42759329552912018, ours 0.4275932955291202, R's 0.4275932955291213), so those
+goldens compare 10 significant digits, 9 and 8 for the non-central ones; the
+slice 18 fuzz mode (seeds 41 to 44) ends with 0 differences; `govulncheck` finds
+nothing. The minimal program (`NewSession`, one `Eval`) grows from 10 334 742 to
+11 127 917 bytes for `GOOS=js` (+7.7 %).
+
+Divergences: `qchisq` of a `log.p` below -745; a non-central `df = 0`; `ftable`,
+`ecdf` and `read.fwf` stay deferred. The timing against R is open item
+go-embedded-r/r#48.
 
 History: slice 2 was released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0)
@@ -414,7 +456,7 @@ warnings are R's own: `Error in f(1) : object 'y' not found`.
 
 | Check | Result |
 | --- | --- |
-| goldens: 5 265 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **5 265 / 5 265** (v0.19.0; 4 498 at v0.18.1, 3 733 at v0.17.0, 3 289 at v0.16.0, 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
+| goldens: 5 838 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **5 838 / 5 838** (v0.21.0; 5 802 at v0.20.0, 5 265 at v0.19.0, 4 498 at v0.18.1, 3 733 at v0.17.0, 3 289 at v0.16.0, 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
 | differential fuzz, environments (`--mode env`; seeds 1, 2, 3, 5 000 programs each): `get`, `exists`, `get0`, `mget` with modes, `inherits` and `ifnotfound`; `assign`, `$<-`, `[[<-`, `local`, `evalq` into locked bindings and environments; `rm`; the lock functions; active bindings; `delayedAssign`; `as.list`, `eapply`, `with`, `within`; the namespace functions; `::`, `:::`; `topenv`, `environmentName`. **Exclusions, generated on purpose and counted (1 858 of the 15 000 programs, not in the figure)**: 473 print an environment's address (compared with the address replaced, 0 differ), 458 print a builtin (our `print` shows no formals; compared as `.Primitive("name")`, 0 differ), 485 use a package R installs besides base (compared exactly: 363 differ, the divergence of slice 8), 442 list a hashed environment unsorted (compared exactly: 210 differ, R's order is undefined) | **13 142 / 13 142** compared, plus the exclusions above |
 | differential fuzz, connections and files (`--mode io`; seeds 1, 2, 3, 6 000 programs each, 11 families). **One exclusion, generated on purpose and counted (1 706 of the 18 000 programs, not in the figure)**: non-ASCII text through a connection (compared exactly except for the mark, 0 differ) | **16 294 / 16 294** compared |
 | differential fuzz, dates and times (`--mode datetime`; seeds 1, 2, 3, 6 000 programs each): formatting with 40 conversions (`%s` included), parsing, `POSIXlt` fields, round trips through text, `difftime` in every unit, arithmetic and comparison on `Date`/`POSIXct`/`difftime`, `seq` by day, week, month, quarter, year, `c`, `rep`, `rev`, `sort`, `unique`, time zone conversion in 8 zones; years 1971 to 2037, never 01:00 to 03:59 local. **Exclusions, generated on purpose and counted (1 848 of the 18 000 programs, not in the figure)**: 462 in years before 1902 (R warns once per session, so the warning is not compared; the rest is, 0 differ), 463 in years after 2037 in zones with daylight saving (compared exactly, 0 differ), 445 `tzone` attributes of zones with unusual daylight abbreviations (compared exactly, 56 differ), 478 local times that a daylight-saving change skips or repeats (compared exactly, 64 differ) | **16 152 / 16 152** compared, plus the exclusions above |
