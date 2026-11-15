@@ -13,12 +13,12 @@ of [go-embedded-r/r](https://github.com/go-embedded-r/r) completes milestone M0
 (the oracle harness, against the pinned GNU R 4.6.2), milestone M1 (the
 parser and `deparse`, package `syntax`), which agrees with R's tree, tokens,
 error text and deparse output on 842 of 842 files of R's base packages, and
-milestone M2 (slices 1 to 4).** The evaluator (package `eval`) has 183 of R's
+milestone M2 (slices 1 to 4).** The evaluator (package `eval`) has 184 of R's
 210 primitives and 110 base closures, with replacement, subsetting, attributes,
 S3 dispatch, conditions, `print`, environments as values, the apply family,
 string functions, regular expressions, the math group, factors and matching;
-5 265 goldens match R 4.6.2 (9 of them are recorded for macOS only and compared only there). The evaluator also has connections and files, with a private in-memory file system by default: see [Files and connections]({{< relref "files-and-connections" >}}). The complex and raw types, expression vectors and binary connections (`rawConnection`, `readBin`, `writeBin`, `seek`) arrived in v0.15.0. The other 27 primitives (S4,
-formulas, foreign calls, `.Internal`, tracing) are refused with an
+5 265 goldens match R 4.6.2 (9 of them are recorded for macOS only and compared only there). The evaluator also has connections and files, with a private in-memory file system by default: see [Files and connections]({{< relref "files-and-connections" >}}). The complex and raw types, expression vectors and binary connections (`rawConnection`, `readBin`, `writeBin`, `seek`) arrived in v0.15.0. The `~` primitive arrived in v0.19.0. The other 26 primitives (S4,
+foreign calls, `.Internal`, tracing) are refused with an
 error that says why. Its regular expressions run on
 [go-embedded-r/tre](https://github.com/go-embedded-r/tre), a port of TRE: see
 [Regular expressions]({{< relref "regex" >}}). **M3 (base R, rewritten clean
