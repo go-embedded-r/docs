@@ -145,6 +145,15 @@ In v0.17.0 (slice 15) first drafts that failed the gate again became Go natives
 | `all.equal.language`, `.function` | 33 exact |
 | `all.equal.numeric` | file containment 0.22 against 0.20 |
 
+In v0.20.0 (slice 18) one first draft failed the gate:
+
+| First draft | Score |
+| --- | --- |
+| `xtabs18.R`: `summary.table`, `print.summary.table` | 688 tokens, 0.00 exact and 0.44 normalised containment, longest runs 44 and 44 against `table.R`: both became Go natives, not reworked |
+
+The final `xtabs18.R` scores 0.00 and 0.44 (longest runs under 40), and
+`read18.R` and `stats18.R` score under 0.20.
+
 In v0.19.0 (slice 17) first drafts failed the gate again and became Go natives,
 not reworked:
 
