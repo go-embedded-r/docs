@@ -1,7 +1,7 @@
 ---
 title: "Evaluator"
 weight: 27
-description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 5 838 goldens at v0.21.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
+description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 6 095 goldens at v0.22.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
 ---
 
 <!-- From the README of go-embedded-r/r on main (v0.12.1) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
@@ -265,6 +265,52 @@ Divergences: `qchisq` of a `log.p` below -745; a non-central `df = 0`; `ftable`,
 `ecdf` and `read.fwf` stay deferred. The timing against R is open item
 go-embedded-r/r#48.
 
+## Linear algebra on go-ndarray, contrasts and `model.matrix` (v0.22.0)
+
+v0.22.0 (slice 20, [pull request 51](https://github.com/go-embedded-r/r/pull/51))
+is the linear algebra that the plan called slice 13, and `model.matrix`.
+[go-ndarray](https://github.com/go-ndarray/ndarray) v0.44.0 (BSD-3-Clause,
+package `linalg`, NumPy-shaped, row-major) is what the plan waited for.
+
+Bound to go-ndarray (R's layer only: the call shapes, the defaults, the
+dimnames, the result lists and the messages; a matrix is copied between
+column-major and row-major once on each side): `solve`, `det` and
+`determinant`, `chol`, `svd` and `La.svd`, `eigen` and `norm`.
+
+Written here, because go-ndarray has no equivalent: `qr` is LINPACK's `dqrdc2`
+(Householder with limited pivoting: a column whose norm falls under `tol` times
+its first is moved to the end, which is `rank`) with `qr.qy`, `qr.qty`,
+`qr.coef` (`NA` for the columns past the rank), `qr.fitted` and `qr.resid`, and
+`LAPACK = TRUE` is dgeqp3's column pivoting; `qr.Q`, `qr.R`, `qr.X`, `qr.solve`,
+`solve.qr`, `is.qr` and `as.qr`; `backsolve` and `forwardsolve`; `chol(pivot =
+TRUE)` and `chol2inv`; `rcond`, `kappa` and `.kappa_tri`, where `rcond` is
+dgecon's estimate, not the exact value.
+
+Contrasts and `model.matrix` (R, over the `terms` of slice 17):
+`contr.treatment`, `contr.sum`, `contr.helmert`, `contr.SAS`, `contr.poly`,
+`contrasts` and `contrasts<-`, and `model.matrix.default` for a formula, a
+`terms` object or a model frame.
+
+Bounds, stated against math/big (the residual of each result formed at 300 bits,
+the infinity norm, u = 2^-53): `solve`, `chol`, `qr`, `svd` and `eigen` each have
+one, and go-ndarray holds every bound it was asked; none is missed. Its gaps are
+functions R needs that it lacks (LU factors, a condition estimator, a pivoted QR
+and `dqrdc2`, `dormqr`, `dtrtrs`, a pivoted Cholesky), and the README lists them
+for its owner.
+
+Gates: 257 new goldens, **6 095 in all** (5 838 at v0.21.0); basecov goes from
+908 to 943 of 1 362 (69.2 %); `go test ./...` and `GOOS=wasip1` under wazero
+pass; `govulncheck` finds nothing; the slice 20 fuzz mode (seeds 41 to 44) ends
+with 0 differences. The minimal program (`NewSession`, one `Eval`) grows by
+13.2 % for `GOOS=js` and for `wasip1`.
+
+Divergences: the signs of singular vectors of a wide matrix and of eigenvectors
+of a symmetric matrix can differ from R's; `kappa` with the default norm is an
+estimate that differs from R's; `qr` of a complex matrix, `svd`, `chol` and
+`chol2inv` of complex matrices, and `poly` are deferred, so
+`model.matrix(~ poly(x, 2))` is too. The timing against R is deferred (the load
+was too high): open item go-embedded-r/r#48.
+
 History: slice 2 was released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0)
 ([pull request 8](https://github.com/go-embedded-r/r/pull/8)); v0.4.0
@@ -456,7 +502,7 @@ warnings are R's own: `Error in f(1) : object 'y' not found`.
 
 | Check | Result |
 | --- | --- |
-| goldens: 5 838 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **5 838 / 5 838** (v0.21.0; 5 802 at v0.20.0, 5 265 at v0.19.0, 4 498 at v0.18.1, 3 733 at v0.17.0, 3 289 at v0.16.0, 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
+| goldens: 6 095 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **6 095 / 6 095** (v0.22.0; 5 838 at v0.21.0, 5 802 at v0.20.0, 5 265 at v0.19.0, 4 498 at v0.18.1, 3 733 at v0.17.0, 3 289 at v0.16.0, 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
 | differential fuzz, environments (`--mode env`; seeds 1, 2, 3, 5 000 programs each): `get`, `exists`, `get0`, `mget` with modes, `inherits` and `ifnotfound`; `assign`, `$<-`, `[[<-`, `local`, `evalq` into locked bindings and environments; `rm`; the lock functions; active bindings; `delayedAssign`; `as.list`, `eapply`, `with`, `within`; the namespace functions; `::`, `:::`; `topenv`, `environmentName`. **Exclusions, generated on purpose and counted (1 858 of the 15 000 programs, not in the figure)**: 473 print an environment's address (compared with the address replaced, 0 differ), 458 print a builtin (our `print` shows no formals; compared as `.Primitive("name")`, 0 differ), 485 use a package R installs besides base (compared exactly: 363 differ, the divergence of slice 8), 442 list a hashed environment unsorted (compared exactly: 210 differ, R's order is undefined) | **13 142 / 13 142** compared, plus the exclusions above |
 | differential fuzz, connections and files (`--mode io`; seeds 1, 2, 3, 6 000 programs each, 11 families). **One exclusion, generated on purpose and counted (1 706 of the 18 000 programs, not in the figure)**: non-ASCII text through a connection (compared exactly except for the mark, 0 differ) | **16 294 / 16 294** compared |
 | differential fuzz, dates and times (`--mode datetime`; seeds 1, 2, 3, 6 000 programs each): formatting with 40 conversions (`%s` included), parsing, `POSIXlt` fields, round trips through text, `difftime` in every unit, arithmetic and comparison on `Date`/`POSIXct`/`difftime`, `seq` by day, week, month, quarter, year, `c`, `rep`, `rev`, `sort`, `unique`, time zone conversion in 8 zones; years 1971 to 2037, never 01:00 to 03:59 local. **Exclusions, generated on purpose and counted (1 848 of the 18 000 programs, not in the figure)**: 462 in years before 1902 (R warns once per session, so the warning is not compared; the rest is, 0 differ), 463 in years after 2037 in zones with daylight saving (compared exactly, 0 differ), 445 `tzone` attributes of zones with unusual daylight abbreviations (compared exactly, 56 differ), 478 local times that a daylight-saving change skips or repeats (compared exactly, 64 differ) | **16 152 / 16 152** compared, plus the exclusions above |
