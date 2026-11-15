@@ -1,7 +1,7 @@
 ---
 title: "Evaluator"
 weight: 27
-description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 4 498 goldens at v0.18.1), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
+description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 5 265 goldens at v0.19.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
 ---
 
 <!-- From the README of go-embedded-r/r on main (v0.12.1) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
@@ -142,6 +142,47 @@ oracle's platform. Still deferred: `scan`, `read.table` and the readers of utils
 `warnings`, `rowsum`, `jitter` and `sample`, `str`, `stack` and `unstack`
 (utils), `aggregate` (stats), `array2DF`, the `[`, `[[` and `$<-` methods of
 `POSIXlt`, the remaining `as.data.frame` methods.
+
+## Formulas, `terms`, model frames, `aggregate` and `str` (v0.19.0)
+
+v0.19.0 (slice 17, [pull request 47](https://github.com/go-embedded-r/r/pull/47))
+opens formulas and what they allow: the `~` primitive, `terms`, the model frame,
+`aggregate`, `stack`, `unstack`, `sort_by` with a formula; then, without
+formulas, `str`, `rowsum`, `warnings`, `Vectorize`, `chkDots`, `array2DF`, the
+`[`, `[[`, `[<-`, `[[<-` and `$<-` methods of `POSIXlt` and the remaining
+`as.data.frame` methods. It adds 767 goldens, **5 265 in all**; basecov goes from
+869 to 905 of 1 362 (63.8 % to 66.4 %), and 184 of the 210 primitives are
+implemented (`~` is no longer refused). A search of 2 253 repositories of the
+fleet found no formula parser, so the term algebra is written here, from
+`?terms.object`, `?formula` and the oracle; `terms.formula` is a Go native.
+The slice 17 fuzz mode (seeds 41, 42, 43, 44; 3 000 programs each) ends with 0
+differences, and `FuzzEval` ran 4.1 million executions without a crasher after
+a first run found and fixed `format.pval(0, c)`.
+
+Clean room: the first drafts that failed the gate became Go natives, not
+reworked: `model.frame.default`, `.MFclass`, `model.response` and
+`get_all_vars` (longest exact run 80 of `formula17.R` against `models.R`),
+`rowsum.default` and `rowsum.data.frame` (53 against `rowsum.R`), and `unname`
+(48 against `unname.R`). See [Clean room]({{< relref "clean-room" >}}).
+
+Bounds: a formula that expands to 2^20 terms or has 100 000 terms is refused
+(`the formula expands to more than 65536 terms`), as is `aggregate` over 10^8
+groups (`too many groups`) and the other 2^40-element cases of
+`eval/bomb_slice17_test.go`.
+
+Divergences: the oracle refuses to print what `str` shows of a list, a data
+frame, a named vector, a matrix with dimnames, a formula or a function, and
+refuses what `Vectorize` returns, so those are checked by Go tests, not by
+goldens; `print` of a formula made in a function writes `<environment>` for the
+address R prints; `terms` does not replace `poly` or `ns` in `predvars`, ignores
+`neg.out` and warns on `abb`; `update` has no method but the formula;
+`summary.warnings` and `format.warnings` are not written; the matrix and list
+columns that `aggregate` builds (`FUN = range`) are not printed. Still
+deferred: `scan`, `read.table`, `read.csv`, `read.delim`, `xtabs`, `ftable`,
+`model.matrix` and the contrasts (slice 13 is blocked on linear algebra),
+`summary` of tables, `median`, `var`, `quantile` and the other statistics of
+the stats package, `serialize` and `unserialize`, the distributions and the
+random number generators (shared engines).
 
 History: slice 2 was released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0)
@@ -334,7 +375,7 @@ warnings are R's own: `Error in f(1) : object 'y' not found`.
 
 | Check | Result |
 | --- | --- |
-| goldens: 4 498 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **4 498 / 4 498** (v0.18.1; 3 733 at v0.17.0, 3 289 at v0.16.0, 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
+| goldens: 5 265 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **5 265 / 5 265** (v0.19.0; 4 498 at v0.18.1, 3 733 at v0.17.0, 3 289 at v0.16.0, 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
 | differential fuzz, environments (`--mode env`; seeds 1, 2, 3, 5 000 programs each): `get`, `exists`, `get0`, `mget` with modes, `inherits` and `ifnotfound`; `assign`, `$<-`, `[[<-`, `local`, `evalq` into locked bindings and environments; `rm`; the lock functions; active bindings; `delayedAssign`; `as.list`, `eapply`, `with`, `within`; the namespace functions; `::`, `:::`; `topenv`, `environmentName`. **Exclusions, generated on purpose and counted (1 858 of the 15 000 programs, not in the figure)**: 473 print an environment's address (compared with the address replaced, 0 differ), 458 print a builtin (our `print` shows no formals; compared as `.Primitive("name")`, 0 differ), 485 use a package R installs besides base (compared exactly: 363 differ, the divergence of slice 8), 442 list a hashed environment unsorted (compared exactly: 210 differ, R's order is undefined) | **13 142 / 13 142** compared, plus the exclusions above |
 | differential fuzz, connections and files (`--mode io`; seeds 1, 2, 3, 6 000 programs each, 11 families). **One exclusion, generated on purpose and counted (1 706 of the 18 000 programs, not in the figure)**: non-ASCII text through a connection (compared exactly except for the mark, 0 differ) | **16 294 / 16 294** compared |
 | differential fuzz, dates and times (`--mode datetime`; seeds 1, 2, 3, 6 000 programs each): formatting with 40 conversions (`%s` included), parsing, `POSIXlt` fields, round trips through text, `difftime` in every unit, arithmetic and comparison on `Date`/`POSIXct`/`difftime`, `seq` by day, week, month, quarter, year, `c`, `rep`, `rev`, `sort`, `unique`, time zone conversion in 8 zones; years 1971 to 2037, never 01:00 to 03:59 local. **Exclusions, generated on purpose and counted (1 848 of the 18 000 programs, not in the figure)**: 462 in years before 1902 (R warns once per session, so the warning is not compared; the rest is, 0 differ), 463 in years after 2037 in zones with daylight saving (compared exactly, 0 differ), 445 `tzone` attributes of zones with unusual daylight abbreviations (compared exactly, 56 differ), 478 local times that a daylight-saving change skips or repeats (compared exactly, 64 differ) | **16 152 / 16 152** compared, plus the exclusions above |
