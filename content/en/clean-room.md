@@ -145,6 +145,19 @@ In v0.17.0 (slice 15) first drafts that failed the gate again became Go natives
 | `all.equal.language`, `.function` | 33 exact |
 | `all.equal.numeric` | file containment 0.22 against 0.20 |
 
+In v0.19.0 (slice 17) first drafts failed the gate again and became Go natives,
+not reworked:
+
+| First draft | Score |
+| --- | --- |
+| `formula17.R`: `model.frame.default`, `.MFclass`, `model.response`, `get_all_vars` | 3 660 tokens, 0.11 exact and 0.33 normalised containment, longest runs 80 and 80 against `models.R` (`.MFclass` 76, `model.response` 59, `get_all_vars` 58): `eval/modelframe17.go` |
+| `misc17.R`: `rowsum.default`, `rowsum.data.frame` | 2 257 tokens, 0.00 and 0.35, longest runs 53 and 56 against `rowsum.R`: `eval/rowsum17.go` |
+| `unname` (a one-line change in `support.R`) | a 48-token run against `unname.R`: `eval/formula17.go` |
+
+The final files score: `formula17.R` 0.00 exact and 0.32 normalised (longest
+runs 21 and 38), `agg17.R` 0.00 and 0.39 (33 and 56), `misc17.R` 0.00 and 0.36
+(33 and 36), `support.R` 0.02 and 0.38 (17 and 25).
+
 In v0.18.1 (slice 16) one more first draft failed the gate:
 
 | First draft | Score |
