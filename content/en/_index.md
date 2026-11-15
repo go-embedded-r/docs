@@ -4,11 +4,11 @@ linkTitle: "Home"
 type: docs
 cascade:
   type: docs
-description: "A pure-Go, embeddable R interpreter, in development: v0.20.0 completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and M2 (evaluator); M3 (base R) is in progress, 66.7 % of base's exports agreeing with R; M4 to M8 are planned."
+description: "A pure-Go, embeddable R interpreter, in development: v0.21.0 completes M0 (oracle harness against GNU R 4.6.2), M1 (parser and deparse) and M2 (evaluator); M3 (base R) is in progress, 66.7 % of base's exports agreeing with R; M4 to M8 are planned."
 ---
 
 **go-embedded-r is in development.
-[v0.20.0](https://github.com/go-embedded-r/r/releases/tag/v0.20.0) (2026-11-15)
+[v0.21.0](https://github.com/go-embedded-r/r/releases/tag/v0.21.0) (2026-11-15)
 of [go-embedded-r/r](https://github.com/go-embedded-r/r) completes milestone M0
 (the oracle harness, against the pinned GNU R 4.6.2), milestone M1 (the
 parser and `deparse`, package `syntax`), which agrees with R's tree, tokens,
@@ -17,7 +17,7 @@ milestone M2 (slices 1 to 4).** The evaluator (package `eval`) has 184 of R's
 210 primitives and 110 base closures, with replacement, subsetting, attributes,
 S3 dispatch, conditions, `print`, environments as values, the apply family,
 string functions, regular expressions, the math group, factors and matching;
-5 265 goldens match R 4.6.2 at v0.19.0, and v0.20.0 adds 537 (9 of them are recorded for macOS only and compared only there). The evaluator also has connections and files, with a private in-memory file system by default: see [Files and connections]({{< relref "files-and-connections" >}}). The complex and raw types, expression vectors and binary connections (`rawConnection`, `readBin`, `writeBin`, `seek`) arrived in v0.15.0. The `~` primitive arrived in v0.19.0. The other 26 primitives (S4,
+5 838 goldens match R 4.6.2 (9 of them are recorded for macOS only and compared only there). The evaluator also has connections and files, with a private in-memory file system by default: see [Files and connections]({{< relref "files-and-connections" >}}). The complex and raw types, expression vectors and binary connections (`rawConnection`, `readBin`, `writeBin`, `seek`) arrived in v0.15.0. The `~` primitive arrived in v0.19.0. The other 26 primitives (S4,
 foreign calls, `.Internal`, tracing) are refused with an
 error that says why. Its regular expressions run on
 [go-embedded-r/tre](https://github.com/go-embedded-r/tre), a port of TRE: see
