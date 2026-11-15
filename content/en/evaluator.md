@@ -1,7 +1,7 @@
 ---
 title: "Evaluator"
 weight: 27
-description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 3 733 goldens at v0.17.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
+description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 4 498 goldens at v0.18.1), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
 ---
 
 <!-- From the README of go-embedded-r/r on main (v0.12.1) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
@@ -109,6 +109,39 @@ cannot return it). Still deferred: `strwrap`, `pretty`, `kronecker`,
 `dput`/`dget`/`dump`, `print.rle`, `seq.POSIXt`, `round`, `trunc` and `cut` of
 dates, `by`, `file.info`, `scan`, `numeric_version`, `summary` of dates and
 tables.
+
+## Version numbers, dates and times, text and `by` (v0.18.0, v0.18.1)
+
+v0.18.0 (slice 16, [pull request 45](https://github.com/go-embedded-r/r/pull/45))
+takes what slice 15 deferred, in the order of `rparity basecov`: the version
+numbers (`numeric_version`, `package_version`, `R_system_version`,
+`getRversion`, `R.version`, `compareVersion`), the dates and times (`seq.POSIXt`,
+`round`, `trunc` and `cut` of `Date` and `POSIXt`, `summary` of dates, times and
+differences), `strwrap`, `pretty`, `kronecker` and `%x%`, `print.rle`, `dput`,
+`dget`, `dump` and the options of `deparse`, `by`, `file.info` and its relatives,
+the marks of `format`, `formatC` and `prettyNum`, and a few small closures. It
+adds 765 goldens, **4 498 in all**; basecov goes from 782 to 869 of 1 362 (57.4 %
+to 63.8 %). The slice 16 fuzz mode (seeds 41, 42, 43, 44; 3 000 programs each)
+found 0 differences, and `FuzzEval` ran 3.4 million executions without a crasher.
+
+Clean room: no R file failed at its first draft except `cut.Date` and
+`cut.POSIXt`, converted to Go natives per the rule in v0.18.1
+([pull request 46](https://github.com/go-embedded-r/r/pull/46)); v0.18.0 had
+reworked the R draft until it passed, which the rule does not allow. See
+[Clean room]({{< relref "clean-room" >}}).
+
+Divergences: the oracle's arm64 build fuses `from + i * by` into one rounding and
+its amd64 build does not, so ten snippets (the `pretty` and
+`seq(length.out =)` ones) are compared within 8 units in the last place; `pretty`
+follows the parameters the help page documents but is not a copy of R's
+algorithm; `file.info` reports uid and gid 0 and the owner `root` for every file;
+`print.rle` writes the `str` line for numbers, text, logicals and raw vectors
+only; `sort_by` of a formula is not supported; `R.version` is the one of the
+oracle's platform. Still deferred: `scan`, `read.table` and the readers of utils,
+`summary` of tables (`pchisq`), formulas (`~`), `Vectorize`, `chkDots`,
+`warnings`, `rowsum`, `jitter` and `sample`, `str`, `stack` and `unstack`
+(utils), `aggregate` (stats), `array2DF`, the `[`, `[[` and `$<-` methods of
+`POSIXlt`, the remaining `as.data.frame` methods.
 
 History: slice 2 was released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0)
@@ -301,7 +334,7 @@ warnings are R's own: `Error in f(1) : object 'y' not found`.
 
 | Check | Result |
 | --- | --- |
-| goldens: 3 733 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **3 733 / 3 733** (v0.17.0; 3 289 at v0.16.0, 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
+| goldens: 4 498 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **4 498 / 4 498** (v0.18.1; 3 733 at v0.17.0, 3 289 at v0.16.0, 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
 | differential fuzz, environments (`--mode env`; seeds 1, 2, 3, 5 000 programs each): `get`, `exists`, `get0`, `mget` with modes, `inherits` and `ifnotfound`; `assign`, `$<-`, `[[<-`, `local`, `evalq` into locked bindings and environments; `rm`; the lock functions; active bindings; `delayedAssign`; `as.list`, `eapply`, `with`, `within`; the namespace functions; `::`, `:::`; `topenv`, `environmentName`. **Exclusions, generated on purpose and counted (1 858 of the 15 000 programs, not in the figure)**: 473 print an environment's address (compared with the address replaced, 0 differ), 458 print a builtin (our `print` shows no formals; compared as `.Primitive("name")`, 0 differ), 485 use a package R installs besides base (compared exactly: 363 differ, the divergence of slice 8), 442 list a hashed environment unsorted (compared exactly: 210 differ, R's order is undefined) | **13 142 / 13 142** compared, plus the exclusions above |
 | differential fuzz, connections and files (`--mode io`; seeds 1, 2, 3, 6 000 programs each, 11 families). **One exclusion, generated on purpose and counted (1 706 of the 18 000 programs, not in the figure)**: non-ASCII text through a connection (compared exactly except for the mark, 0 differ) | **16 294 / 16 294** compared |
 | differential fuzz, dates and times (`--mode datetime`; seeds 1, 2, 3, 6 000 programs each): formatting with 40 conversions (`%s` included), parsing, `POSIXlt` fields, round trips through text, `difftime` in every unit, arithmetic and comparison on `Date`/`POSIXct`/`difftime`, `seq` by day, week, month, quarter, year, `c`, `rep`, `rev`, `sort`, `unique`, time zone conversion in 8 zones; years 1971 to 2037, never 01:00 to 03:59 local. **Exclusions, generated on purpose and counted (1 848 of the 18 000 programs, not in the figure)**: 462 in years before 1902 (R warns once per session, so the warning is not compared; the rest is, 0 differ), 463 in years after 2037 in zones with daylight saving (compared exactly, 0 differ), 445 `tzone` attributes of zones with unusual daylight abbreviations (compared exactly, 56 differ), 478 local times that a daylight-saving change skips or repeats (compared exactly, 64 differ) | **16 152 / 16 152** compared, plus the exclusions above |

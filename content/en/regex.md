@@ -36,7 +36,7 @@ copied, and the behaviours are judged by R itself.
 | Check | Result |
 | --- | --- |
 | R-level differential fuzz: random POSIX extended patterns, with lazy quantifiers, back-references, `\<` `\>` `\b` and non-ASCII text, through `grepl`, `sub`, `gsub`, `regexpr`, `gregexpr`, `strsplit`, `regmatches` (`--mode regex`; seeds 1, 7, 21; each function reported on its own line; nothing excluded) | **60 000 / 60 000** |
-| goldens of `testdata/eval`, including regular expressions, against R 4.6.2 | **3 733 / 3 733** (v0.17.0) |
+| goldens of `testdata/eval`, including regular expressions, against R 4.6.2 | **4 498 / 4 498** (v0.18.1) |
 
 The port itself is also checked against upstream TRE; see
 [The tre module]({{< relref "tre" >}}).

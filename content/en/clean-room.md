@@ -145,7 +145,19 @@ In v0.17.0 (slice 15) first drafts that failed the gate again became Go natives
 | `all.equal.language`, `.function` | 33 exact |
 | `all.equal.numeric` | file containment 0.22 against 0.20 |
 
-The three R files that pass score: `misc15.R` 0.01 exact and 0.33 normalised
+In v0.18.1 (slice 16) one more first draft failed the gate:
+
+| First draft | Score |
+| --- | --- |
+| `cut.Date`, `cut.POSIXt` | 72 exact, 81 normalised (`dates.R`), over the limits of 40 and 60: Go natives in `eval/cut16.go`, written from the help page and the oracle |
+
+v0.18.0 had reworked the R draft until it passed, which the rule does not allow.
+`datetime16.R` now scores 0.05 and 0.29 containment, longest runs 20 and 48. The
+new files score: `version16.R` 0.00 exact and 0.33 normalised containment
+(longest runs 31 and 31), `output16.R` 0.01 and 0.34 (28 and 31), `text16.R`
+0.00 and 0.32 (20 and 42), `misc16.R` 0.00 and 0.39 (36 and 37).
+
+The three R files of slice 15 that pass score: `misc15.R` 0.01 exact and 0.33 normalised
 containment, longest exact run 36; `summary15.R` 0.09 and 0.40, longest 23 exact
 and 49 normalised; `methods15.R` 0.00 and 0.44, longest 38 exact and 51
 normalised.
