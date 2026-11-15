@@ -109,6 +109,55 @@ provenance record: see [Clean room]({{< relref "clean-room" >}}).
 A slice is tagged when its goldens, fuzz, `FuzzEval` and bomb tests are green and
 `basecov` has moved. Slices 5 onwards are planned, not started.
 
+### Shared engines (decided 2026-11-10 and 2026-11-11)
+
+go-embedded-r does not write its own copy of an engine that several languages
+of the fleet need ([go-embedded-ruby/ruby#918](https://github.com/go-embedded-ruby/ruby/issues/918)).
+It binds the shared library and keeps only a thin layer that is faithful to GNU
+R: call shapes, argument defaults, the result lists, the messages.
+
+- **Numerics** (M4, stats): `optim`, `optimize`, `uniroot`, `nlm`, `nlminb`,
+  `nls`, `integrate`, ODE solvers, and the special functions (`gamma`, `beta`,
+  `besselJ` and the rest) bind
+  [go-numerics](https://github.com/go-numerics). Where GNU R's algorithm differs
+  from go-numerics' default, the R layer selects R's (for example `optim`'s
+  Nelder–Mead constants, `uniroot`'s tolerance rule, `integrate`'s QUADPACK
+  routine) and records in its divergences when a result is not bit-identical to
+  GNU R's. go-numerics now states an accuracy contract: a bound on the error
+  against an extended-precision oracle (math/big or mpmath), see go-numerics
+  optimize#61 and special#69. When a result is not bit-identical to GNU R's,
+  the R layer quotes that bound as the guarantee instead of calling the
+  difference "last-bit noise"; bit-exact arithmetic stays an option.
+- **Statistics** (descriptive statistics, tests, the distributions): bind
+  [go-statistics/stats](https://github.com/go-statistics/stats) (v0.1.1 since
+  slice 19), and later [go-statistics/models](https://github.com/go-statistics/models)
+  for `lm`, `glm` and `anova`; not go-numerics, which has no statistics kernel.
+  The R layer keeps the glue (NA, `na.rm`, `use=`, `names`, recycling) and
+  binds a function only where go-statistics meets the bound this repository
+  states against math/big (the test is in `eval/stats18_bind_test.go`); where
+  it does not, the kernel stays here and the gap is listed in the README, for
+  the owner of go-statistics to close. The upstream gaps are
+  [go-statistics/stats#24](https://github.com/go-statistics/stats/issues/24),
+  [#25](https://github.com/go-statistics/stats/issues/25),
+  [#26](https://github.com/go-statistics/stats/issues/26) and
+  [#27](https://github.com/go-statistics/stats/issues/27).
+- **What R does better goes upstream.** When R's reference has an algorithm, a
+  default or a test problem that go-numerics lacks, it is added to go-numerics
+  for the whole fleet, not to the R layer. This applies only to what is
+  available outside R's own GPL text: published papers and netlib's public
+  domain or BSD code (QUADPACK, MINPACK, PORT). R's own C and R sources, nmath
+  included, stay unread here and are never ported into a shared library.
+- **Linear algebra**: slice 13, on go-ndarray's linear algebra once it is a
+  shared library.
+- **Regex `perl = TRUE`**: go-regexp/pcre2. **Compression** (`gzfile`,
+  `memCompress`): the shared zlib. **Random numbers** (M4): the shared bit
+  generators, as long as their state reads back as R's `.Random.seed`.
+- **Files, environment, clock**: go-embedded-r has the no-host mode (the
+  default in-memory tree) and the confined-root mode (`Options.FileRoot`) since
+  v0.13.0. It adopts the shared host and sandbox layer
+  ([go-embedded-julia/julia#32](https://github.com/go-embedded-julia/julia/issues/32))
+  when that layer has both modes.
+
 ## Gates, per slice
 
 1. goldens from our own snippets, compared with the oracle byte for byte (value,
