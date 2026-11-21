@@ -1,7 +1,7 @@
 ---
 title: "Evaluator"
 weight: 27
-description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 6 095 goldens at v0.22.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
+description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 6 516 goldens at v0.23.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
 ---
 
 <!-- From the README of go-embedded-r/r on main (v0.12.1) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
@@ -311,6 +311,50 @@ estimate that differs from R's; `qr` of a complex matrix, `svd`, `chol` and
 `model.matrix(~ poly(x, 2))` is too. The timing against R is deferred (the load
 was too high): open item go-embedded-r/r#48.
 
+## `ftable`, `ecdf`, `poly`, `read.fwf` and the S3 methods they leave (v0.23.0)
+
+v0.23.0 (slice 21, [pull request 53](https://github.com/go-embedded-r/r/pull/53))
+closes the stretch that slices 19 and 20 deferred. The R is in
+`eval/baselib/slice21a.R` to `slice21d.R`, the Go natives in `eval/slice21.go`.
+
+Added: `ftable` (`ftable.default`, `ftable.formula`, `format`, `print`,
+`as.table`, `as.matrix`, `as.data.frame`); `ecdf` with `summary`, `quantile`,
+`knots` and `print`; `poly` and `predict.poly`, so `model.matrix(~ poly(x, 2))`
+works; `read.fwf`; `formatDL`; the `srcfile` family (`open`, `close`,
+`summary`); the methods of `factor`, `noquote`, `table`, `listof`, `simple.list`
+and `POSIXlt`; `.rowSums`, `.colSums`, `.rowMeans`, `.colMeans`, `.row` and
+`.col`; `pairlist` and `as.pairlist`, `regmatches<-`, `gregexec`,
+`merge.default` and `split<-.data.frame`; the restart accessors, hooks and task
+callbacks, `traceback`, `withAutoprint`, `srcref`, `print.function` and
+`write.dcf`. `regmatches(invert = NA)` gives `NA` for an `NA` input and
+`is.pairlist` is true of a pairlist.
+
+Bounds, asserted against math/big (u = 2^-53): `ecdf` has |rel| <= u (worst
+0.923 u); `poly` has the infinity norms of `Z'Z - I` and `Z'1` at most 64 n u
+(worst 0.0126 of it); `predict.poly` reproduces the basis to 4 u; the raw powers
+are within 8 u.
+
+Gates: 421 new goldens in six shards, **6 516 in all** (6 095 at v0.22.0; each
+shard far under 512 KiB); basecov goes from 943 to 1 033 of 1 362 (75.8 %);
+`go test ./...` and `GOOS=wasip1` under wazero pass; `govulncheck` finds
+nothing; the slice 21 fuzz mode (seeds 41 to 44, 2 000 programs each) ends with
+0 differences. `FuzzEval` found a crasher (`qr(,)`, an empty `tol` read as a
+scalar: an index panic in slice 20 code) that now fails with `invalid 'tol'
+argument`; its input is in the corpus and every other scalar read of that shape
+is fixed. `FuzzReadFwf` (60 s, corpus committed) found none. The bomb tests
+(`eval/bomb_slice21_test.go`) are refused before any allocation. The minimal
+program grows from 12 592 818 to 12 675 374 bytes for `GOOS=js` (+0.66 %).
+
+Divergences: the `ecdf` quantile differs from R in the last bit; `poly`'s
+`norm2` differs by about 3 ulp; the order of the attributes after arithmetic on
+a matrix carrying `assign` differs from R's (pre-existing); `sys.status` counts
+frames differently from the oracle harness; `ecdf` of a non-numeric value is
+refused with R's "zero non-NA points" (R may succeed on numeric-looking
+strings); `read.fwf` with `widths` as a list is refused. Deferred: package,
+namespace, DLL and autoload machinery, `sample` and `jitter`, `trace` and
+`untrace`, `plot`. The timing against R is deferred (the 1-minute load was 53
+against a limit of 8): open item go-embedded-r/r#48.
+
 History: slice 2 was released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0)
 ([pull request 8](https://github.com/go-embedded-r/r/pull/8)); v0.4.0
@@ -502,7 +546,7 @@ warnings are R's own: `Error in f(1) : object 'y' not found`.
 
 | Check | Result |
 | --- | --- |
-| goldens: 6 095 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **6 095 / 6 095** (v0.22.0; 5 838 at v0.21.0, 5 802 at v0.20.0, 5 265 at v0.19.0, 4 498 at v0.18.1, 3 733 at v0.17.0, 3 289 at v0.16.0, 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
+| goldens: 6 516 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **6 516 / 6 516** (v0.23.0; 6 095 at v0.22.0, 5 838 at v0.21.0, 5 802 at v0.20.0, 5 265 at v0.19.0, 4 498 at v0.18.1, 3 733 at v0.17.0, 3 289 at v0.16.0, 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
 | differential fuzz, environments (`--mode env`; seeds 1, 2, 3, 5 000 programs each): `get`, `exists`, `get0`, `mget` with modes, `inherits` and `ifnotfound`; `assign`, `$<-`, `[[<-`, `local`, `evalq` into locked bindings and environments; `rm`; the lock functions; active bindings; `delayedAssign`; `as.list`, `eapply`, `with`, `within`; the namespace functions; `::`, `:::`; `topenv`, `environmentName`. **Exclusions, generated on purpose and counted (1 858 of the 15 000 programs, not in the figure)**: 473 print an environment's address (compared with the address replaced, 0 differ), 458 print a builtin (our `print` shows no formals; compared as `.Primitive("name")`, 0 differ), 485 use a package R installs besides base (compared exactly: 363 differ, the divergence of slice 8), 442 list a hashed environment unsorted (compared exactly: 210 differ, R's order is undefined) | **13 142 / 13 142** compared, plus the exclusions above |
 | differential fuzz, connections and files (`--mode io`; seeds 1, 2, 3, 6 000 programs each, 11 families). **One exclusion, generated on purpose and counted (1 706 of the 18 000 programs, not in the figure)**: non-ASCII text through a connection (compared exactly except for the mark, 0 differ) | **16 294 / 16 294** compared |
 | differential fuzz, dates and times (`--mode datetime`; seeds 1, 2, 3, 6 000 programs each): formatting with 40 conversions (`%s` included), parsing, `POSIXlt` fields, round trips through text, `difftime` in every unit, arithmetic and comparison on `Date`/`POSIXct`/`difftime`, `seq` by day, week, month, quarter, year, `c`, `rep`, `rev`, `sort`, `unique`, time zone conversion in 8 zones; years 1971 to 2037, never 01:00 to 03:59 local. **Exclusions, generated on purpose and counted (1 848 of the 18 000 programs, not in the figure)**: 462 in years before 1902 (R warns once per session, so the warning is not compared; the rest is, 0 differ), 463 in years after 2037 in zones with daylight saving (compared exactly, 0 differ), 445 `tzone` attributes of zones with unusual daylight abbreviations (compared exactly, 56 differ), 478 local times that a daylight-saving change skips or repeats (compared exactly, 64 differ) | **16 152 / 16 152** compared, plus the exclusions above |
