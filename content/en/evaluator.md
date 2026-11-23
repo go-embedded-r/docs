@@ -1,7 +1,7 @@
 ---
 title: "Evaluator"
 weight: 27
-description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 6 944 goldens at v0.27.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
+description: "M2, package eval: the design choices, slices 1 to 4 (175 of 210 primitives and 110 base closures, 7 025 goldens at v0.28.0), judged by the oracle; M2 is complete, and M3 has added a base library, strings, conditions, environments, namespaces and dates and times."
 ---
 
 <!-- From the README of go-embedded-r/r on main (v0.12.1) and its docs/m2-design.md. Change the repository's README and design first, then here. -->
@@ -522,6 +522,67 @@ as in slice 23, and the distributions (slices 26 and 27). The timing against R i
 deferred (the load was above 100): open item go-embedded-r/r#48; the size is
 tracked as go-embedded-r/r#62.
 
+## The continuous distributions (slice 26, M4, v0.28.0)
+
+v0.28.0 (slice 26, the third slice of M4; [pull request 63](https://github.com/go-embedded-r/r/pull/63))
+adds the continuous distributions. The plan of M4 is
+[M4 plan / numerics]({{< relref "m4-plan" >}}).
+
+Added: `d`, `p` and `q` of `norm`, `unif`, `exp`, `gamma`, `beta`, `t`, `f`,
+`chisq`, `lnorm`, `logis`, `cauchy` and `weibull`, with `log`, `lower.tail` and
+`log.p`, `rate` or `scale` for `gamma`, partial argument names inside these
+functions, and R's boundary values (`sd = 0`, `min == max`, infinite
+parameters), bound to go-statistics/stats v0.1.1.
+
+Bound (measured, worst error in ulps against double-double and math/big oracles,
+for the plain, log and quantile forms; the asserted bound follows in brackets):
+
+| family | plain | log | quantile |
+|---|---|---|---|
+| norm | 0 (4) | 0 (8) | 1 (8) |
+| lnorm | 35 (64) | 35 (64) | 4 (16) |
+| exp | 1 (4) | 1 (4) | 1 (8) |
+| weibull | 32 (64) | 4 (8) | 1 (16) |
+| logis | 2 (4) | 2 (8) | 1 (8) |
+| cauchy | 1 (8) | 0 (8) | 1 (16) |
+| gamma | 565 (1024) | 565 (1024) | 21 (64) |
+| chisq | 0 (16) | 1 (16) | 1 (16) |
+| beta | 1 (16) | 1 (16) | 1 (16) |
+| t | 1 (16) | 1 (16) | 2 (16) |
+| f | 1 (16) | 1 (16) | 2 (16) |
+
+The `lnorm` and `weibull` errors come from the conditioning of `log(x)` and
+`exp(-t)`, not from the binding. The `gamma` worst case, 565 ulp, is the upper
+tail, `pgamma(30, 2.5, lower.tail = FALSE)`, which is go-statistics/stats' own
+accuracy: an upstream gap, not an accurate result.
+
+Gates: **7 025 goldens** agree (new shard `testdata/eval/slice26c.R`; 6 944 at
+v0.27.0); basecov stays at 1 118 of 1 362 (82.1 %); `rparity evalfuzz --mode
+slice26` (seeds 41 to 44, 2 000 programs each) has 0 differ; `FuzzEval` (60 s)
+found no crasher; `govulncheck` is clean; wasip1 under wazero passes. The
+mutation sweep of `eval/slice26.go`: 89 refusals, 89 caught, 0 survived, 0 hung,
+with no skip. Bombs (`eval/bomb_slice26_test.go`): hostile parameters and vector
+lengths are refused or answered NaN, not run. Clean room: no R file was added.
+Size (#62): the js wasm of a minimal program is 15 064 332 bytes (v0.26.0:
+13 128 894; +14.7 %), wasip1 15 015 289 (13 110 871; +14.5 %); the growth is the
+data tables of go-numerics/special, which are not lazy, and `TestWasmSizeBudget`
+(`testdata/sizebudget.json`, 2 % tolerance) fails on any further growth. Timing
+against R: deferred, the machine load was 16.5 (go-embedded-r/r#48).
+
+Limits: `ncp` other than 0 for `t`, `beta` and `f` is refused (stats has no
+non-central version; slice 27); `pgamma`, `pchisq` and `pt` with `log.p = TRUE`
+answer NaN with a warning where the probability underflows
+(`pgamma(3, 1000, rate = 2, log.p = TRUE)` is -4126.36 in R), and `t`, `gamma`
+and `chisq` answer NaN for |x| beyond about 1e150; `dbeta(x, 1, 1, log = TRUE)`
+is +0 here and -0 in R; `pgamma(0.5, Inf)` is a quirk of R not reproduced; the
+Weibull density with shape 1 and scale Inf is untested; partial argument
+matching is local to these functions. Divergences where R is the less accurate:
+`qt(1e-10, 0.5, lower.tail = FALSE)`, `qf(-1e-5, 1, 1, lower.tail = FALSE,
+log.p = TRUE)`, `qf(0.001, 0.5, 100)`, `qf(-30, 2, 10, log.p = TRUE)`;
+`qweibull(-1000, 2, 3, log.p = TRUE)` is the true root here and 0 by underflow
+in R. Deferred: the `r*` samplers (slice 28), the discrete families and the
+non-central ones (slice 27).
+
 History: slice 2 was released in
 [v0.3.0](https://github.com/go-embedded-r/r/releases/tag/v0.3.0)
 ([pull request 8](https://github.com/go-embedded-r/r/pull/8)); v0.4.0
@@ -713,7 +774,7 @@ warnings are R's own: `Error in f(1) : object 'y' not found`.
 
 | Check | Result |
 | --- | --- |
-| goldens: 6 944 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **6 944 / 6 944** (v0.27.0; 6 916 at v0.26.0, 6 830 at v0.25.0, 6 678 at v0.24.0, 6 516 at v0.23.0, 6 095 at v0.22.0, 5 838 at v0.21.0, 5 802 at v0.20.0, 5 265 at v0.19.0, 4 498 at v0.18.1, 3 733 at v0.17.0, 3 289 at v0.16.0, 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
+| goldens: 7 025 snippets (9 of them recorded for macOS only, `testdata/eval/platform_darwin.R`, and compared only there) of `testdata/eval` (matrices, arrays and grouping, vectors, math group, language primitives, factors and matching, environments, apply, strings, regular expressions, arithmetic, comparison, sequences, coercion, summaries, closures, matching, laziness, loops, subsetting, assignment, attributes, S3, conditions, printing, errors), each compared with R 4.6.2's serialized value (byte for byte), visibility, printed output, standard error, warnings, and error message and call; replayed by `go test` without R | **7 025 / 7 025** (v0.28.0; 6 944 at v0.27.0, 6 916 at v0.26.0, 6 830 at v0.25.0, 6 678 at v0.24.0, 6 516 at v0.23.0, 6 095 at v0.22.0, 5 838 at v0.21.0, 5 802 at v0.20.0, 5 265 at v0.19.0, 4 498 at v0.18.1, 3 733 at v0.17.0, 3 289 at v0.16.0, 3 048 at v0.15.0, 2 737 at v0.14.1, 2 356 at v0.13.1, 2 028 at v0.12.1, 2 022 at v0.12.0, 1 570 at v0.11.0, 1 302 at v0.10.0, 1 202 at v0.8.0, 1 154 at v0.7.0) |
 | differential fuzz, environments (`--mode env`; seeds 1, 2, 3, 5 000 programs each): `get`, `exists`, `get0`, `mget` with modes, `inherits` and `ifnotfound`; `assign`, `$<-`, `[[<-`, `local`, `evalq` into locked bindings and environments; `rm`; the lock functions; active bindings; `delayedAssign`; `as.list`, `eapply`, `with`, `within`; the namespace functions; `::`, `:::`; `topenv`, `environmentName`. **Exclusions, generated on purpose and counted (1 858 of the 15 000 programs, not in the figure)**: 473 print an environment's address (compared with the address replaced, 0 differ), 458 print a builtin (our `print` shows no formals; compared as `.Primitive("name")`, 0 differ), 485 use a package R installs besides base (compared exactly: 363 differ, the divergence of slice 8), 442 list a hashed environment unsorted (compared exactly: 210 differ, R's order is undefined) | **13 142 / 13 142** compared, plus the exclusions above |
 | differential fuzz, connections and files (`--mode io`; seeds 1, 2, 3, 6 000 programs each, 11 families). **One exclusion, generated on purpose and counted (1 706 of the 18 000 programs, not in the figure)**: non-ASCII text through a connection (compared exactly except for the mark, 0 differ) | **16 294 / 16 294** compared |
 | differential fuzz, dates and times (`--mode datetime`; seeds 1, 2, 3, 6 000 programs each): formatting with 40 conversions (`%s` included), parsing, `POSIXlt` fields, round trips through text, `difftime` in every unit, arithmetic and comparison on `Date`/`POSIXct`/`difftime`, `seq` by day, week, month, quarter, year, `c`, `rep`, `rev`, `sort`, `unique`, time zone conversion in 8 zones; years 1971 to 2037, never 01:00 to 03:59 local. **Exclusions, generated on purpose and counted (1 848 of the 18 000 programs, not in the figure)**: 462 in years before 1902 (R warns once per session, so the warning is not compared; the rest is, 0 differ), 463 in years after 2037 in zones with daylight saving (compared exactly, 0 differ), 445 `tzone` attributes of zones with unusual daylight abbreviations (compared exactly, 56 differ), 478 local times that a daylight-saving change skips or repeats (compared exactly, 64 differ) | **16 152 / 16 152** compared, plus the exclusions above |
