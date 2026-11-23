@@ -1,10 +1,10 @@
 ---
 title: "M3 plan / base coverage"
 weight: 26
-description: "M3 (base R, clean room) has started: the plan, the coverage metric (81.6 % of base's 1 362 exports agree with R 4.6.2 at v0.26.0), and how it is measured."
+description: "M3 (base R, clean room) has started: the plan, the coverage metric (82.1 % of base's 1 362 exports agree with R 4.6.2 at v0.27.0), and how it is measured."
 ---
 
-<!-- From docs/m3-plan.md and the README of go-embedded-r/r on main (v0.26.0). Change those first, then here. -->
+<!-- From docs/m3-plan.md and the README of go-embedded-r/r on main (v0.27.0). Change those first, then here. -->
 
 **M3 has started.** M2 gave an evaluator with 175 of R's 210 primitives; M3 is the
 rest of what `library(base)` exports (1 152 closures). The first slice of M3 is
@@ -14,7 +14,7 @@ starts the base library, is [v0.8.0](https://github.com/go-embedded-r/r/releases
 slice 6 (strings and format) is v0.9.0 and v0.9.1, slice 7 (conditions and the
 call stack) is v0.10.0, slice 8 (environments and namespaces) is v0.11.0, slice 9 (dates and times) is
 v0.12.0 and v0.12.1, slice 10 (connections and files) is v0.13.0 and v0.13.1, slice 11
-(matrices, arrays and grouping) is v0.14.0 and v0.14.1, and slice 12 (complex and raw types, expression vectors, binary connections) is v0.15.0, and slice 14 (data frames and table) is v0.16.0, and slice 15 (`summary`, `all.equal`, group methods, function objects) is v0.17.0, and slice 16 (version numbers, dates and times, `strwrap`, `pretty`, `dput`, `by`, `file.info`) is v0.18.0 and v0.18.1, and slice 17 (formulas and `terms`, `model.frame`, `aggregate`, `str`, `rowsum`, `Vectorize`, `warnings`) is v0.19.0, and slice 18 (readers and writers of tables, `xtabs`, descriptive statistics) is v0.20.0, and slice 19 (statistics on go-statistics/stats, `pchisq`, `qchisq`, the `summary.table` test) is v0.21.0, and slice 20 (linear algebra on go-ndarray, `qr`, `chol`, `svd`, `eigen`, `rcond`, the contrasts, `model.matrix`; the plan's slice 13) is v0.22.0, and slice 21 (`ftable`, `ecdf`, `poly`, `read.fwf` and the methods slices 19 and 20 deferred) is v0.23.0, and slice 22 (the small functions that need no host: `choose`, `findInterval`, `encodeString` and others) is v0.24.0, and slice 23 (what slice 22 deferred: `lchoose`, `abbreviate`, `agrep`, the locale family and others) is v0.25.0, the last slice of M3, and slice 24 (the random streams, the first slice of M4; see [M4 plan / numerics]({{< relref "m4-plan" >}})) is v0.26.0, the current release. The plan is
+(matrices, arrays and grouping) is v0.14.0 and v0.14.1, and slice 12 (complex and raw types, expression vectors, binary connections) is v0.15.0, and slice 14 (data frames and table) is v0.16.0, and slice 15 (`summary`, `all.equal`, group methods, function objects) is v0.17.0, and slice 16 (version numbers, dates and times, `strwrap`, `pretty`, `dput`, `by`, `file.info`) is v0.18.0 and v0.18.1, and slice 17 (formulas and `terms`, `model.frame`, `aggregate`, `str`, `rowsum`, `Vectorize`, `warnings`) is v0.19.0, and slice 18 (readers and writers of tables, `xtabs`, descriptive statistics) is v0.20.0, and slice 19 (statistics on go-statistics/stats, `pchisq`, `qchisq`, the `summary.table` test) is v0.21.0, and slice 20 (linear algebra on go-ndarray, `qr`, `chol`, `svd`, `eigen`, `rcond`, the contrasts, `model.matrix`; the plan's slice 13) is v0.22.0, and slice 21 (`ftable`, `ecdf`, `poly`, `read.fwf` and the methods slices 19 and 20 deferred) is v0.23.0, and slice 22 (the small functions that need no host: `choose`, `findInterval`, `encodeString` and others) is v0.24.0, and slice 23 (what slice 22 deferred: `lchoose`, `abbreviate`, `agrep`, the locale family and others) is v0.25.0, the last slice of M3, and slice 24 (the random streams, the first slice of M4; see [M4 plan / numerics]({{< relref "m4-plan" >}})) is v0.26.0, and slice 25 (the special functions) is v0.27.0, the current release. The plan is
 [`docs/m3-plan.md`](https://github.com/go-embedded-r/r/blob/main/docs/m3-plan.md).
 
 ## The metric
@@ -43,6 +43,7 @@ v0.12.0 and v0.12.1, slice 10 (connections and files) is v0.13.0 and v0.13.1, sl
 | v0.24.0 (slice 22, the small functions that need no host: `choose`, `findInterval`, `encodeString`) | 1 077 of 1 362 | **79.1 %** |
 | v0.25.0 (slice 23, `lchoose`, `abbreviate`, `agrep`, the locale family, `balancePOSIXlt`) | 1 105 of 1 362 | **81.1 %** |
 | v0.26.0 (slice 24, M4: `.Random.seed`, `set.seed`, `runif`, `sample`, `rnorm`) | 1 111 of 1 362 | **81.6 %** |
+| v0.27.0 (slice 25, M4: `gamma`, `lgamma`, `beta`, `digamma`, `psigamma`, `besselI`, `besselJ`, `besselK`, `besselY`) | 1 118 of 1 362 | **82.1 %** |
 
 ## How it is measured
 
